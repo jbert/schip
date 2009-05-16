@@ -1,0 +1,25 @@
+- schip.ast.node
+	- s.a.atom (type=atom, value=string)
+	- s.a.list (type=list, value=aref of ref-to-s.a.n)
+		(we use ref-to-s.a.n so (cdr l) only needs to shallow-copy)
+	- test: compose tree for (lambda (x) (+ 2 x))
+		- walk tree with accessors
+
+- schip.evaluator.value
+	- just isa schip.ast.node for now, since we're interpreting
+
+- schip.environment
+	- ->lookup(symbol) (returns a schip.evaluator.value)
+	- ->push_frame(sym => val, sym => val, ...);
+	- ->pop_frame()
+
+- schip.evaluator
+	- takes an s.a.list + s.env and returns and modifies s.env
+		- eval:
+			- s.a.atom	=> s.e.value representing atom
+			- s.a.list	=> switch(car list)
+								-> special form
+								-> lookup form to get value
+									if isa primitive prim->invoke(
+									error unless val isa s.a.list+car=lambda
+									eval-lambda with (cdr form) args

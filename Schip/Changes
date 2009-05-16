@@ -1,0 +1,6 @@
+Revision history for Perl extension Schip.
+
+0.01  Sat May 16 08:35:03 2009
+	- original version; created by h2xs 1.23 with options
+		-AXc -n Schip
+
