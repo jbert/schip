@@ -1,4 +1,4 @@
-- schip.ast.node
+DONE - schip.ast.node
 	- s.a.atom (type=atom, value=string)
 	- s.a.list (type=list, value=aref of ref-to-s.a.n)
 		(we use ref-to-s.a.n so (cdr l) only needs to shallow-copy)
