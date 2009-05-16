@@ -5,14 +5,17 @@ DONE - schip.ast.node
 	- test: compose tree for (lambda (x) (+ 2 x))
 		- walk tree with accessors
 
-- schip.environment
+DONE - schip.environment
 	- ->lookup(symbol) (returns a schip.evaluator.value)
 	- ->push_frame(sym => val, sym => val, ...);
 	- ->pop_frame()
-	- test
+	- test behavoiur needed for closures
 
 - schip.run.value
 	- just isa schip.ast.node for now, since we're interpreting
+
+- how to handle closures?
+	- lamdba contains ref to env?
 
 - schip.run
 	->make_initial_environment
