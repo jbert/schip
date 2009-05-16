@@ -5,21 +5,35 @@ DONE - schip.ast.node
 	- test: compose tree for (lambda (x) (+ 2 x))
 		- walk tree with accessors
 
-- schip.evaluator.value
-	- just isa schip.ast.node for now, since we're interpreting
-
 - schip.environment
 	- ->lookup(symbol) (returns a schip.evaluator.value)
 	- ->push_frame(sym => val, sym => val, ...);
 	- ->pop_frame()
+	- test
 
-- schip.evaluator
-	- takes an s.a.list + s.env and returns and modifies s.env
+- schip.run.value
+	- just isa schip.ast.node for now, since we're interpreting
+
+- schip.run
+	->make_initial_environment
+		+ empty plus primitives
+
+	->eval_ast_tree(tree, env)
+	- takes an s.a.list + s.env and returns an s.r.v and modifies s.env
 		- eval:
-			- s.a.atom	=> s.e.value representing atom
-			- s.a.list	=> switch(car list)
+			- s.a.atom	=> s.r.value representing atom
+			- s.a.list	=> switch(car list) (perl 5.10!)
 								-> special form
 								-> lookup form to get value
-									if isa primitive prim->invoke(
+									if isa primitive prim->invoke
 									error unless val isa s.a.list+car=lambda
 									eval-lambda with (cdr form) args
+
+- schip.parser
+	- takes a str, generates list of s.a.list (or go for implicit begin?)
+
+
+
+- can we get as far as compiling lambdas to perl code?
+	- they could install into the environment in the same way that the
+	initially supplied primitives do
