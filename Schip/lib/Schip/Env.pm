@@ -36,6 +36,9 @@ sub lookup {
 sub clone {
 	my $self = shift;
 	my $clone = __PACKAGE__->new;
+	# Shallow copy of frames, to work when we take a closure
+	# (We don't currently allow set!, if/when we do allow mutable
+	# frames, should we deep copy or not?)
 	$clone->_frames([ @{$self->_frames} ]);
 	return $clone;
 }
