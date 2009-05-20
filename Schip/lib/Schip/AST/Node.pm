@@ -16,7 +16,7 @@
 	package Schip::AST::Num;
 	use Moose;
 
-	extends qw(Schip::AST::Node);
+	extends qw(Schip::AST::Atom);
 	has 'value'	=> (is => 'rw', isa => 'Num');
 
 	sub to_string {
@@ -29,7 +29,7 @@
 	package Schip::AST::Sym;
 	use Moose;
 
-	extends qw(Schip::AST::Node);
+	extends qw(Schip::AST::Atom);
 	has 'value'	=> (is => 'rw', isa => 'Str');
 
 	sub to_string {
@@ -42,7 +42,7 @@
 	package Schip::AST::Str;
 	use Moose;
 
-	extends qw(Schip::AST::Node);
+	extends qw(Schip::AST::Atom);
 	has 'value'	=> (is => 'rw', isa => 'Str');
 
 	sub to_string {
