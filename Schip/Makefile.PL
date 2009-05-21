@@ -5,7 +5,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'Schip',
     VERSION_FROM      => 'lib/Schip.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {
+		'Class::ErrorHandler'	=> 0,
+		'MooseX::NonMoose'		=> 0,
+		},
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Schip.pm', # retrieve abstract from module
        AUTHOR         => 'John Berthels <jjberthels@gmail.com>') : ()),

@@ -11,11 +11,14 @@ DONE - schip.environment
 	- ->pop_frame()
 	- test behavoiur needed for closures
 
-- schip.run.value
+DONE - schip.run.value
 	- just isa schip.ast.node for now, since we're interpreting
 
 - how to handle closures?
 	- lamdba contains ref to env?
+
+- schip.parser
+	- takes a str, generates list of s.a.list (or go for implicit begin?)
 
 - schip.run
 	->make_initial_environment
@@ -31,9 +34,6 @@ DONE - schip.environment
 									if isa primitive prim->invoke
 									error unless val isa s.a.list+car=lambda
 									eval-lambda with (cdr form) args
-
-- schip.parser
-	- takes a str, generates list of s.a.list (or go for implicit begin?)
 
 
 
