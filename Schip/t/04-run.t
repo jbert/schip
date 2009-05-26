@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 52;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -22,14 +22,24 @@ sub main_tests {
 		"(+ 1 2 3)"		=> "6",
 		"(+ -1 1)"		=> "0",
 		"(+ -1 1)"		=> "0",
-		
+
 		# Test begin
 		"(begin 1)"		=> "1",
 		"(begin 1 2)"	=> "2",
 		"(begin 0 1 2)"	=> "2",
 
+		# Basic test of define (define returns defined val)
+		"(define x 2)"	=> "2",
+		"(define x (+ 2 2))"	=> "4",
+		"(begin
+			(define x (+ 2 2))
+			x)"			=> "4",
+
 		# Test lambda
 #		"((lambda (x) (+ 2 x)) 2)",
+
+#		"(define x 2)\n(begin 0 x)"		=> 2,
+#		"(define x 2)\n(+ 3 x)"			=> 5,
 	);
 
 	my $parser = Schip::Parser->new;
@@ -37,9 +47,13 @@ sub main_tests {
 		my $code		= shift @test_cases;
 		my $expected	= shift @test_cases;
 
+		note("Checking $code");
+
 		my $tree		= $parser->parse($code);
 		my $deparse		= $tree->to_string;
-		is($deparse, $code, "parsed code deparses to same string");
+		my $mungedCode  = $code;
+		$mungedCode =~ s/\s+/ /g;
+		is($deparse, $mungedCode, "parsed code deparses to same string");
 		my $evaluator	= Schip::Evaluator->new;
 		my $result		= $evaluator->evaluate_form($tree);
 		ok($result, "form evaluated ok");
@@ -56,14 +70,11 @@ sub test_atoms {
 		Schip::AST::Num->new(value => 10),
 		Schip::AST::Str->new(value => ""),
 		Schip::AST::Str->new(value => "hello"),
-		Schip::AST::Sym->new(value => '+'),
-		Schip::AST::Sym->new(value => 'lambda'),
-		Schip::AST::Sym->new(value => 'begin'),
-		Schip::AST::Sym->new(value => 'unrecognised-symbol'),
 	);
 	foreach my $atom (@self_evalating_atoms) {
 		my $result = $evaluator->evaluate_form($atom);
-		isa_ok($result, ref $atom, "result is same type as atom: " . ref $atom);
+		isa_ok($result, ref $atom, "result is same type as atom: "
+			. $atom->value);
 		is($result->value, $atom->value, "result has same value as atom");
 	}
 }

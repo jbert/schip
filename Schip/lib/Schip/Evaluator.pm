@@ -46,7 +46,12 @@ sub evaluate_form {
 	my $value;
 	eval {
 		die_error("UNDEFINED_FORM") unless $form;
-		if ($form->isa('Schip::AST::Atom')) {
+		if ($form->isa('Schip::AST::Sym')) {
+			$value = $self->env->lookup($form->value);
+			die_error("UNDEFINED_SYMBOL: " . $form->value)
+				unless defined $value;
+		}
+		elsif ($form->isa('Schip::AST::Atom')) {
 			$value = $form;
 		}
 		elsif ($form->isa('Schip::AST::List')) {
@@ -78,7 +83,7 @@ sub _evaluate_list {
 		unless $car->isa('Schip::AST::Sym');
 
 	my $form_handler = $self->_lookup_special_form($car);
-	return $form_handler->($values) if $form_handler;
+	return $form_handler->($self, $values) if $form_handler;
 
 	my $carVal	= $self->env->lookup($car->value);
 	die_error("Symbol in car position is not invokable: " . $car->value)
@@ -90,9 +95,29 @@ sub _evaluate_list {
 
 my %special_forms = (
 	begin 		=> sub {
-		my $values = shift;
-		return $values->[-1];
+		my $eval = shift;
+		my $args = shift;
+
+		my @vals = map { $eval->evaluate_form($_) } @$args;
+		return $vals[-1];
 	},
+	define		=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		my $sym		= shift @$args;
+		my $sym_str = $sym->value;
+		my $body	= shift @$args;
+		my $val 	= $eval->evaluate_form($body);
+		$eval->env->push_frame($sym_str => $val);
+		return $val;
+	}
+#	lambda		=> sub {
+#		my $values = shift;
+#		my $args	= shift @$values;
+#		my $body	= shift @$values;
+#		return $values->[-1];
+#	}
 );
 
 sub _lookup_special_form {
