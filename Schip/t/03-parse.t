@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 45;
+use Test::More tests => 51;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -47,6 +47,9 @@ is($tree->value->[1]->value, '"hello, \\"world\\""', "with correct value");
 my %atom_type = (
 	"+"					=> 'Sym',
 	"1024",				=> 'Num',
+	"-10",				=> 'Num',
+	"1.0",				=> 'Num',
+	"-1.0",				=> 'Num',
 	'hello'				=> 'Sym',
 	'"hello, world"'	=> 'Str',
 );

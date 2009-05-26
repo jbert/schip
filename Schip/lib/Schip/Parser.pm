@@ -55,9 +55,9 @@ sub _parse_atom {
 	my $token	= shift;
 	my $type;
 	given ($token) {
-		when (/^\d+$/)		{ $type = 'Num' };
-		when (/^\".*\"$/)	{ $type = 'Str' };
-		default				{ $type = 'Sym' };
+		when (/^-?[\.\d]+$/)	{ $type = 'Num' };
+		when (/^\".*\"$/)		{ $type = 'Str' };
+		default					{ $type = 'Sym' };
 	}
 	$type = "Schip::AST::$type";
 	return $type->new(value => $token);
