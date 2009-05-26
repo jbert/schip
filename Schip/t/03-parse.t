@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 53;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -52,6 +52,7 @@ my %atom_type = (
 	"-1.0",				=> 'Num',
 	'hello'				=> 'Sym',
 	'"hello, world"'	=> 'Str',
+	"0",				=> 'Num',
 );
 foreach my $atom_string (keys %atom_type) {
 	$tree = $parser->parse($atom_string);

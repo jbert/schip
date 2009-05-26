@@ -71,7 +71,7 @@ sub _tokenize_string {
 	die "NO_TOKENS" unless @raw_tokens;
 	my @tokens;
 	RAW_TOKEN:
-	while (my $raw_token = shift @raw_tokens) {
+	while (defined (my $raw_token = shift @raw_tokens)) {
 		next RAW_TOKEN unless defined $raw_token;
 		my ($start_parens, $token, $end_parens)
 			= $raw_token =~ /^
