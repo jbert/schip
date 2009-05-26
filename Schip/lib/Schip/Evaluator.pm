@@ -27,6 +27,31 @@ use Schip::Env;
 
 	extends qw(Schip::Evaluator::Invokable);
 
+	has 'params'	=> (is => 'ro', isa => 'Schip::AST::List');
+	has 'body'		=> (is => 'ro', isa => 'Schip::AST::Node');
+	has 'env'		=> (is => 'ro', isa => 'Schip::Env');
+
+	sub invoke {
+		my $self = shift;
+		my $args = shift;
+
+		my $env = $self->env;
+		my @params = @{$self->params->value};
+		my @args   = @{$args};
+		die "Got " . (scalar @args) . " args but expected " . scalar (@params)
+			unless scalar(@args) == scalar (@params);
+		my %frame;
+		while (@params) {
+			my $param	= shift @params;
+			my $arg		= shift @args;
+			$frame{$param->value} = $arg;
+		}
+		$env->push_frame(%frame);
+		my $evaluator = Schip::Evaluator->new(env => $self->env);
+		my $value = $evaluator->_evaluate_form($self->body);
+		$env->pop_frame;
+		return $value;
+	}
 
 	package Schip::Evaluator::Error;
 	use Moose;
@@ -45,21 +70,7 @@ sub evaluate_form {
 
 	my $value;
 	eval {
-		die_error("UNDEFINED_FORM") unless $form;
-		if ($form->isa('Schip::AST::Sym')) {
-			$value = $self->env->lookup($form->value);
-			die_error("UNDEFINED_SYMBOL: " . $form->value)
-				unless defined $value;
-		}
-		elsif ($form->isa('Schip::AST::Atom')) {
-			$value = $form;
-		}
-		elsif ($form->isa('Schip::AST::List')) {
-			$value = $self->_evaluate_list($form);
-		}
-		else {
-			die_error("unrecognised form type: " . ref $form) unless $form;
-		}
+		$value = $self->_evaluate_form($form);
 	};
 	if ($@) {
 		if (UNIVERSAL::isa($@, 'Schip::Evaluator::Error')) {
@@ -68,6 +79,29 @@ sub evaluate_form {
 		else {
 			die $@;
 		}
+	}
+	return $value;
+}
+
+sub _evaluate_form {
+	my $self = shift;
+	my $form = shift;
+
+	my $value;
+	die_error("UNDEFINED_FORM") unless $form;
+	if ($form->isa('Schip::AST::Sym')) {
+		$value = $self->env->lookup($form->value);
+		die_error("UNDEFINED_SYMBOL: " . $form->value)
+			unless defined $value;
+	}
+	elsif ($form->isa('Schip::AST::Atom')) {
+		$value = $form;
+	}
+	elsif ($form->isa('Schip::AST::List')) {
+		$value = $self->_evaluate_list($form);
+	}
+	else {
+		die_error("unrecognised form type: " . ref $form) unless $form;
 	}
 	return $value;
 }
@@ -82,11 +116,11 @@ sub _evaluate_list {
 	my $form_handler = $self->_lookup_special_form($car);
 	return $form_handler->($self, $values) if $form_handler;
 
-	my $carVal	= $self->evaluate_form($car);
+	my $carVal	= $self->_evaluate_form($car);
 	die_error("Symbol in car position is not invokable: " . $car->value)
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
-	my @evaluated_args = map { $self->evaluate_form($_) } @$values;
+	my @evaluated_args = map { $self->_evaluate_form($_) } @$values;
 	return $carVal->invoke(\@evaluated_args);
 }
 
@@ -95,7 +129,7 @@ my %special_forms = (
 		my $eval = shift;
 		my $args = shift;
 
-		my @vals = map { $eval->evaluate_form($_) } @$args;
+		my @vals = map { $eval->_evaluate_form($_) } @$args;
 		return $vals[-1];
 	},
 	define		=> sub {
@@ -105,16 +139,23 @@ my %special_forms = (
 		my $sym		= shift @$args;
 		my $sym_str = $sym->value;
 		my $body	= shift @$args;
-		my $val 	= $eval->evaluate_form($body);
+		my $val 	= $eval->_evaluate_form($body);
 		$eval->env->push_frame($sym_str => $val);
 		return $val;
-	}
-#	lambda		=> sub {
-#		my $values = shift;
-#		my $args	= shift @$values;
-#		my $body	= shift @$values;
-#		return $values->[-1];
-#	}
+	},
+	lambda		=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		my $params	= shift @$args;
+		my $body	= shift @$args;
+
+		return Schip::Evaluator::Lambda->new(
+			params	=> $params,
+			body	=> $body,
+			env		=> $eval->env->clone,
+		);
+	},
 );
 
 sub _lookup_special_form {

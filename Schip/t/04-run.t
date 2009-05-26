@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 55;
+use Test::More tests => 58;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -16,6 +16,7 @@ exit 0;
 sub main_tests {
 	my @test_cases = (
 		# Variations on a theme
+
 		"0"				=> "0",
 		"2"				=> "2",
 		"(+ 1 2)"		=> "3",
@@ -41,7 +42,7 @@ sub main_tests {
 			z)"			=> "11",
 
 		# Test lambda
-#		"((lambda (x) (+ 2 x)) 2)",
+		"((lambda (x) (+ 2 x)) 2)"		=> 4,
 
 #		"(define x 2)\n(begin 0 x)"		=> 2,
 #		"(define x 2)\n(+ 3 x)"			=> 5,
