@@ -79,13 +79,10 @@ sub _evaluate_list {
 	my $values	= $list_form->value;
 	my $car		= shift @$values;
 
-	die_error("Non-symbol in car position: " . ref $car)
-		unless $car->isa('Schip::AST::Sym');
-
 	my $form_handler = $self->_lookup_special_form($car);
 	return $form_handler->($self, $values) if $form_handler;
 
-	my $carVal	= $self->env->lookup($car->value);
+	my $carVal	= $self->evaluate_form($car);
 	die_error("Symbol in car position is not invokable: " . $car->value)
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
