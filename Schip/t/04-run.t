@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 58;
+use Test::More tests => 73;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -42,7 +42,13 @@ sub main_tests {
 			z)"			=> "11",
 
 		# Test lambda
+		"((lambda (x) x) 0)"			=> 0,
+		"((lambda (x) x) 1)"			=> 1,
+		"((lambda (x) x) 2)"			=> 2,
+#		'((lambda (x) (x)) "hello, world")'			=> "hello, world",
 		"((lambda (x) (+ 2 x)) 2)"		=> 4,
+		"((lambda (x) (+ x x)) 3)"		=> 6,
+		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
 
 #		"(define x 2)\n(begin 0 x)"		=> 2,
 #		"(define x 2)\n(+ 3 x)"			=> 5,
