@@ -63,6 +63,15 @@ sub main_tests {
 			(define double (lambda (x) (+ x x)))
 			(double 3))"				=> 6,
 
+		# Test basic closure
+		"(begin
+			(define make-adder
+				(lambda (n)
+					(lambda (x) (+ n x))))
+			(define add-twoer
+				(lambda (a) (make-adder 2)))
+			(add-twoer 7))"				=> 9,
+		
 #		"(define x 2)\n(begin 0 x)"		=> 2,
 #		"(define x 2)\n(+ 3 x)"			=> 5,
 	);
