@@ -73,15 +73,33 @@ sub _evaluate_list {
 
 	my $values	= $list_form->value;
 	my $car		= shift @$values;
+
 	die_error("Non-symbol in car position: " . ref $car)
 		unless $car->isa('Schip::AST::Sym');
-	# TODO: handle special forms
+
+	my $form_handler = $self->_lookup_special_form($car);
+	return $form_handler->($values) if $form_handler;
+
 	my $carVal	= $self->env->lookup($car->value);
 	die_error("Symbol in car position is not invokable: " . $car->value)
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
 	my @evaluated_args = map { $self->evaluate_form($_) } @$values;
 	return $carVal->invoke(\@evaluated_args);
+}
+
+my %special_forms = (
+	begin 		=> sub {
+		my $values = shift;
+		return $values->[-1];
+	},
+);
+
+sub _lookup_special_form {
+	my $self = shift;
+	my $form = shift;
+	return unless $form->isa('Schip::AST::Sym');
+	return $special_forms{$form->value};
 }
 
 sub make_initial_environment {
