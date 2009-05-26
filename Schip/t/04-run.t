@@ -34,6 +34,11 @@ sub main_tests {
 		"(begin
 			(define x (+ 2 2))
 			x)"			=> "4",
+		"(begin
+			(define x (+ 2 2))
+			(define y (+ 3 4))
+			(define z (+ x y))
+			z)"			=> "11",
 
 		# Test lambda
 #		"((lambda (x) (+ 2 x)) 2)",
