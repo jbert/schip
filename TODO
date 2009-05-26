@@ -17,7 +17,7 @@ DONE - schip.run.value
 - how to handle closures?
 	- lamdba contains ref to env?
 
-- schip.parser
+DONE - schip.parser
 	- takes a str, generates list of s.a.list (or go for implicit begin?)
 
 - schip.run

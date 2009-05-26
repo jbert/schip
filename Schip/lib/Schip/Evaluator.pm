@@ -43,10 +43,28 @@ sub evaluate_form {
 	my $self = shift;
 	my $form = shift;
 
-	return $self->error("undefined form") unless $form;
-	return $form							if $form->isa('Schip::AST::Atom');
-	return $self->_evaluate_list($form)		if $form->isa('Schip::AST::List');
-	return $self->error("unrecognised form type: " . ref $form);
+	my $value;
+	eval {
+		die_error("UNDEFINED_FORM") unless $form;
+		if ($form->isa('Schip::AST::Atom')) {
+			$value = $form;
+		}
+		elsif ($form->isa('Schip::AST::List')) {
+			$value = $self->_evaluate_list($form);
+		}
+		else {
+			die_error("unrecognised form type: " . ref $form) unless $form;
+		}
+	};
+	if ($@) {
+		if (UNIVERSAL::isa($@, 'Schip::Evaluator::Error')) {
+			return $self->error($@->info);
+		}
+		else {
+			die $@;
+		}
+	}
+	return $value;
 }
 
 sub _evaluate_list {
@@ -55,11 +73,11 @@ sub _evaluate_list {
 
 	my $values	= $list_form->value;
 	my $car		= shift @$values;
-	die Schip::Evaluator::Error->new(info => "Non-symbol in car position: " . ref $car)
+	die_error("Non-symbol in car position: " . ref $car)
 		unless $car->isa('Schip::AST::Sym');
 	# TODO: handle special forms
 	my $carVal	= $self->env->lookup($car->value);
-	die Schip::Evaluator::Error->new(info => "Symbol in car position is not invokable: " . $car->value)
+	die_error("Symbol in car position is not invokable: " . $car->value)
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
 	my @evaluated_args = map { $self->evaluate_form($_) } @$values;
@@ -80,14 +98,21 @@ sub _install_primitives {
 	my $plus = Schip::Evaluator::Primitive->new(
 		code => sub {
 			my $args = shift;
-			die Schip::Evaluator::Error->new(info => "Non-numeric argument to +")
-				unless all { $_->isa('Schip::AST::Num') } @$args;
+			my @non_numeric = grep { !$_->isa('Schip::AST::Num') } @$args;
+			die_error("Non-numeric argument to +: "
+				. join(", ", map { $_->value } @non_numeric))
+				if @non_numeric;
 			my $sum = sum map { $_->value } @$args;
 			return Schip::AST::Num->new(value => $sum);
 		}
 	);
 	$env->push_frame('+' => $plus);
 	return $env;
+}
+
+sub die_error {
+	my $error = shift;
+	die Schip::Evaluator::Error->new(info => $error);
 }
 
 sub errstr {
