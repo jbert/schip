@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 73;
+use Test::More tests => 70;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -49,6 +49,19 @@ sub main_tests {
 		"((lambda (x) (+ 2 x)) 2)"		=> 4,
 		"((lambda (x) (+ x x)) 3)"		=> 6,
 		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
+
+		# TODO - do we want implicit begin over multiple forms?
+		# TODO - what semantics do we want for scheme top-level
+		# define and internal define?
+		"(begin
+			(define x 2)
+			(begin 0 x))"				=> 2,
+		"(begin
+			(define x 2)
+			(+ 3 x))"					=> 5,
+		"(begin
+			(define double (lambda (x) (+ x x)))
+			(double 3))"				=> 6,
 
 #		"(define x 2)\n(begin 0 x)"		=> 2,
 #		"(define x 2)\n(+ 3 x)"			=> 5,
