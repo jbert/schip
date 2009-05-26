@@ -10,18 +10,22 @@ extends qw(Class::ErrorHandler);
 sub parse {
 	my $self		= shift;
 	my $code_str	= shift;
-	my @tokens = $self->_tokenize_string($code_str);
-	return $self->errstr("NO_TOKENS") unless @tokens;
-
-	return $self->_parse_one_form(\@tokens);
+	my $form;
+	eval {
+		my $tokens = $self->_tokenize_string($code_str);
+		$form = $self->_parse_one_form($tokens);
+	};
+	if ($@) {
+		return $self->errstr($@);
+	}
+	return $form;
 }
 
 sub _parse_one_form {
 	my $self	= shift;
 	my $tokens	= shift;
 
-	return $self->errstr("EMPTY_STREAM")
-		unless scalar @$tokens;
+	die "EMPTY_STREAM" unless scalar @$tokens;
 	return $self->_parse_list($tokens) 
 		if $tokens->[0] eq "(";
 	return $self->_parse_atom(shift @$tokens);
@@ -31,8 +35,7 @@ sub _parse_list {
 	my $self 	= shift;
 	my $tokens	= shift;
 
-	return $self->errstr("NO_LIST_START")
-		unless $tokens->[0] eq '(';
+	die "NO_LIST_START" unless $tokens->[0] eq '(';
 	shift @$tokens;
 
 	my @contents;
@@ -56,7 +59,6 @@ sub _parse_atom {
 		when (/^\".*\"$/)	{ $type = 'Str' };
 		default				{ $type = 'Sym' };
 	}
-	say "token [$token] is-a $type";
 	$type = "Schip::AST::$type";
 	return $type->new(value => $token);
 }
@@ -66,17 +68,24 @@ sub _tokenize_string {
 	my $code_str	= shift;
 
 	my @raw_tokens = quotewords('\s+', 1, $code_str);
-	return unless @raw_tokens;
+	die "NO_TOKENS" unless @raw_tokens;
 	my @tokens;
+	RAW_TOKEN:
 	while (my $raw_token = shift @raw_tokens) {
+		next RAW_TOKEN unless defined $raw_token;
 		my ($start_parens, $token, $end_parens)
-			= $raw_token =~ /^(\()*([^\)]*)(\))*$/;
+			= $raw_token =~ /^
+							(\(*)
+							([^\)]*)
+							(\)*)
+							$/x;
+		next RAW_TOKEN unless defined $token;
 		$start_parens	||= '';
 		$end_parens		||= '';
 		push @tokens, split(//, $start_parens), $token, split(//, $end_parens);
 	}
-	say "tokens are: " . join(":", @tokens);
-	return @tokens;
+	die "NO_TOKENS" unless @tokens;
+	return \@tokens;
 }
 
 1;

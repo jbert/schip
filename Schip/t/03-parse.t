@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 45;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -75,11 +75,11 @@ is($args->value->[0]->value, "x", "with correct value");
 
 my $body = $tree->value->[2];
 ok($body, "can extract body");
-is($args->value->length, 3, "body has length 3");
-is($args->value->[0]->value, "+", "with correct value");
-isa_ok($args->value->[0], 'Schip::AST::Sym', "+ -> symbol");
-is($args->value->[0]->value, "2", "with correct value");
-isa_ok($args->value->[0], 'Schip::AST::Num', "2 -> symbol");
-is($args->value->[0]->value, "x", "with correct value");
-isa_ok($args->value->[0], 'Schip::AST::Sym', "x -> symbol");
+is($body->value->length, 3, "body has length 3");
+is($body->value->[0]->value, "+", "with correct value");
+isa_ok($body->value->[0], 'Schip::AST::Sym', "+ -> symbol");
+is($body->value->[1]->value, "2", "with correct value");
+isa_ok($body->value->[1], 'Schip::AST::Num', "2 -> symbol");
+is($body->value->[2]->value, "x", "with correct value");
+isa_ok($body->value->[2], 'Schip::AST::Sym', "x -> symbol");
 is($tree->to_string, $code, "deparse correctly");
