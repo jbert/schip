@@ -21,7 +21,7 @@ DONE - schip.parser
 	- takes a str, generates list of s.a.list (or go for implicit begin?)
 
 - schip.run
-	->make_initial_environment
+	DONE ->make_initial_environment
 		+ empty plus primitives
 
 	->eval_ast_tree(tree, env)
@@ -34,6 +34,19 @@ DONE - schip.parser
 									if isa primitive prim->invoke
 									error unless val isa s.a.list+car=lambda
 									eval-lambda with (cdr form) args
+	- debugging errors
+		- decorate AST with line number (and col?)
+		- more uniform error reporting (typed exception?)
+
+	- special forms
+		DONE - begin
+		DONE - define 
+			- introduces new lexical binding - is that what we want?
+		- lambda
+		- if
+		- defmacro
+	- primitives
+		- cons/car/cdr (could do lambda implementation)
 
 
 
