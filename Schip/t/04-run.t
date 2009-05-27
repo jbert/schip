@@ -10,25 +10,42 @@ use Schip::Parser;
 
 test_atoms();
 test_two_plus_two();
-main_tests();
+run_main_tests();
 exit 0;
 
-sub main_tests {
-	my @test_cases = (
-		# Variations on a theme
+sub run_main_tests {
+	test_plus();
+	test_begin();
+	test_define();
+	test_lambda();
+	test_closure();
+#	test_if();
+}
 
+sub test_plus {
+	my @test_cases = (
 		"0"				=> "0",
 		"2"				=> "2",
 		"(+ 1 2)"		=> "3",
 		"(+ 1 2 3)"		=> "6",
 		"(+ -1 1)"		=> "0",
 		"(+ -1 1)"		=> "0",
+	);
+	run_test_cases("test plus", @test_cases);
+}
 
+sub test_begin {
+	my @test_cases = (
 		# Test begin
 		"(begin 1)"		=> "1",
 		"(begin 1 2)"	=> "2",
 		"(begin 0 1 2)"	=> "2",
+	);
+	run_test_cases("test begin", @test_cases);
+}
 
+sub test_define {
+	my @test_cases = (
 		# Basic test of define (define returns defined val)
 		"(define x 2)"	=> "2",
 		"(define x (+ 2 2))"	=> "4",
@@ -40,7 +57,12 @@ sub main_tests {
 			(define y (+ 3 4))
 			(define z (+ x y))
 			z)"			=> "11",
+	);
+	run_test_cases("test define", @test_cases);
+}
 
+sub test_lambda {
+	my @test_cases = (
 		# Test lambda
 		"((lambda (x) x) 0)"			=> 0,
 		"((lambda (x) x) 1)"			=> 1,
@@ -49,7 +71,13 @@ sub main_tests {
 		"((lambda (x) (+ 2 x)) 2)"		=> 4,
 		"((lambda (x) (+ x x)) 3)"		=> 6,
 		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
+	);
+	run_test_cases("test lambda", @test_cases);
+}
 
+sub test_closure {
+
+	my @test_cases = (
 		# TODO - do we want implicit begin over multiple forms?
 		# TODO - what semantics do we want for scheme top-level
 		# define and internal define?
@@ -71,10 +99,29 @@ sub main_tests {
 			(define add-twoer
 				(make-adder 2))
 			(add-twoer 7))"				=> 9,
+	);
+	run_test_cases("test closure", @test_cases);
+}
+
+sub test_if {
+	my @test_cases = (
+		# if
+		"(/ 1 0)"						=> undef,
+		"(if 0 1 2)"					=> 2,
+		"(if 1 1 2)"					=> 1,
+		"(if 0 1 2)"					=> 1,
 		
 #		"(define x 2)\n(begin 0 x)"		=> 2,
 #		"(define x 2)\n(+ 3 x)"			=> 5,
 	);
+	run_test_cases("test if", @test_cases);
+}
+
+sub run_test_cases {
+	my $diag = shift;
+	my @test_cases = @_;
+
+	note "=" x 5 . " " . $diag;
 
 	my $parser = Schip::Parser->new;
 	while (@test_cases) {
