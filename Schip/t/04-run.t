@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 70;
+use Test::More tests => 85;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -63,13 +63,13 @@ sub main_tests {
 			(define double (lambda (x) (+ x x)))
 			(double 3))"				=> 6,
 
-		# Test basic closure
+		# Test more complex lambda/define usage
 		"(begin
 			(define make-adder
 				(lambda (n)
 					(lambda (x) (+ n x))))
 			(define add-twoer
-				(lambda (a) (make-adder 2)))
+				(make-adder 2))
 			(add-twoer 7))"				=> 9,
 		
 #		"(define x 2)\n(begin 0 x)"		=> 2,
