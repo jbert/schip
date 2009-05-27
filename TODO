@@ -42,9 +42,10 @@ DONE - schip.parser
 		DONE - begin
 		DONE - define 
 			- introduces new lexical binding - is that what we want?
-		- lambda
+		DONE - lambda
 		- if
 		- defmacro
+		- let (primitive or special form? define in terms of lambda?)
 	- primitives
 		- cons/car/cdr (could do lambda implementation)
 
