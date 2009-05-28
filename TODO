@@ -49,6 +49,11 @@ DONE - schip.parser
 	- primitives
 		- cons/car/cdr (could do lambda implementation)
 
+	- add boolean type and type coercion
+		- #t and #f parse to s.ast.bool
+		- is a bool a number? (No, you don't want addition etc)
+		- coerce arg to 'if' to boolean
+
 
 
 - can we get as far as compiling lambdas to perl code?
