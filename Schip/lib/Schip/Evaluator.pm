@@ -176,18 +176,44 @@ sub _install_primitives {
 	my $class = shift;
 	my $env   = shift;
 
+	# TODO: write in terms of fold, and make generic
+
+	my $die_unless_numeric = sub {
+		my $args = shift;
+		my @non_numeric = grep { !$_->isa('Schip::AST::Num') } @$args;
+		die_error("Non-numeric argument to +: "
+				. join(", ", map { $_->value } @non_numeric))
+			if @non_numeric;
+	};
+
 	my $plus = Schip::Evaluator::Primitive->new(
 		code => sub {
 			my $args = shift;
-			my @non_numeric = grep { !$_->isa('Schip::AST::Num') } @$args;
-			die_error("Non-numeric argument to +: "
-				. join(", ", map { $_->value } @non_numeric))
-				if @non_numeric;
+			$die_unless_numeric->($args);
 			my $sum = sum map { $_->value } @$args;
 			return Schip::AST::Num->new(value => $sum);
 		}
 	);
 	$env->push_frame('+' => $plus);
+
+	# TODO - pull to seperate module
+#	use Math::BigRat;
+#	my $divide = Schip::Evaluator::Primitive->new(
+#		code => sub {
+#			my $args = shift;
+#			$die_unless_numeric->($args);
+#			my @arg_nums = map { $_->value } @$args;
+#			my $result = Math::BigRat->new(shift @arg_nums);
+#			while (@arg_nums) {
+#				my $arg = shift @arg_nums;
+#				die_error("Division by zero") unless $arg;
+#				$result /= $arg;
+#			}
+#			return Schip::AST::Num->new(value => $result->bstr);
+#		}
+#	);
+#	$env->push_frame('/' => $divide);
+
 	return $env;
 }
 

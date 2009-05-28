@@ -14,9 +14,11 @@
 
 {
 	package Schip::AST::Num;
+#	use Math::BigRat;
 	use Moose;
 
 	extends qw(Schip::AST::Atom);
+#	has 'value'	=> (is => 'rw', isa => 'Num|Math::BigRat');
 	has 'value'	=> (is => 'rw', isa => 'Num');
 
 	sub to_string {
