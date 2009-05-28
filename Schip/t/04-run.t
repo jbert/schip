@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 85;
+use Test::More tests => 94;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,7 +14,7 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
-	test_plus();
+	test_primitives();
 	test_begin();
 	test_define();
 	test_lambda();
@@ -22,7 +22,7 @@ sub run_main_tests {
 #	test_if();
 }
 
-sub test_plus {
+sub test_primitives {
 	my @test_cases = (
 		"0"				=> "0",
 		"2"				=> "2",
@@ -30,6 +30,18 @@ sub test_plus {
 		"(+ 1 2 3)"		=> "6",
 		"(+ -1 1)"		=> "0",
 		"(+ -1 1)"		=> "0",
+
+		# TODO: test returned error string
+		"(error)"			=> undef,
+		"(error \"bob\")"	=> undef,
+		"(begin
+			(error \"bob\")
+			5)"				=> undef,
+
+#		"(/ 1 1)"		=> "1",
+#		"(/ 2 1)"		=> "2",
+#		"(/ 2 0)"		=> undef,
+#		"(/ 1 10)"		=> "1/10",
 	);
 	run_test_cases("test plus", @test_cases);
 }
@@ -67,7 +79,7 @@ sub test_lambda {
 		"((lambda (x) x) 0)"			=> 0,
 		"((lambda (x) x) 1)"			=> 1,
 		"((lambda (x) x) 2)"			=> 2,
-#		'((lambda (x) (x)) "hello, world")'			=> "hello, world",
+		'((lambda (x) x) "hello, world")'			=> "hello, world",
 		"((lambda (x) (+ 2 x)) 2)"		=> 4,
 		"((lambda (x) (+ x x)) 3)"		=> 6,
 		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
@@ -137,9 +149,15 @@ sub run_test_cases {
 		is($deparse, $mungedCode, "parsed code deparses to same string");
 		my $evaluator	= Schip::Evaluator->new;
 		my $result		= $evaluator->evaluate_form($tree);
-		ok($result, "form evaluated ok");
-		note("failed with errstr: " . $evaluator->errstr) if !$result;
-		is($result->value, $expected, "form [$code] evaluates to expected val");
+		if (defined $expected) {
+			ok($result, "form evaluated ok");
+			note("failed with errstr: " . $evaluator->errstr) if !$result;
+			is($result->value, $expected, "form [$code] evaluates to expected val");
+		}
+		else {
+			# TODO: check errstr, line # etc
+			ok(!defined $result, "form returned undef");
+		}
 	}
 }
 

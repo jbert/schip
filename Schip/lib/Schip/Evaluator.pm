@@ -177,31 +177,50 @@ sub _install_primitives {
 	my $env   = shift;
 
 	# TODO: write in terms of fold, and make generic
+	# TODO: this wants to be a class, with helpers
 
-	my $die_unless_numeric = sub {
-		my $args = shift;
-		my @non_numeric = grep { !$_->isa('Schip::AST::Num') } @$args;
-		die_error("Non-numeric argument to +: "
-				. join(", ", map { $_->value } @non_numeric))
-			if @non_numeric;
+	my $die_unless_type = sub {
+		my $type		= shift;
+		my $prim		= shift;
+		my $args		= shift;
+
+		my $class = "Schip::AST::$type";
+		my @wrong_type = grep { !$_->isa($class) } @$args;
+		if (@wrong_type) {
+			my $err = "Non-" . $class->description . " argument(s) to $prim: "
+				. join(", ", map { $_->value } @wrong_type);
+			die_error($err);
+		};
 	};
 
 	my $plus = Schip::Evaluator::Primitive->new(
 		code => sub {
 			my $args = shift;
-			$die_unless_numeric->($args);
+			$die_unless_type->('Num', '+', $args);
 			my $sum = sum map { $_->value } @$args;
 			return Schip::AST::Num->new(value => $sum);
 		}
 	);
 	$env->push_frame('+' => $plus);
 
+	my $error = Schip::Evaluator::Primitive->new(
+		code => sub {
+			my $args = shift;
+			die_error("Error called with > 1 arg") if @$args > 1;
+			$die_unless_type->('Str', 'error', $args);
+			my ($str) = map { $_->value } @$args;
+			$str //= "Unspecified error";
+			die_error($str);
+		}
+	);
+	$env->push_frame('error' => $error);
+
 	# TODO - pull to seperate module
 #	use Math::BigRat;
 #	my $divide = Schip::Evaluator::Primitive->new(
 #		code => sub {
 #			my $args = shift;
-#			$die_unless_numeric->($args);
+#			$die_unless_type->('Num', '+', $args);
 #			my @arg_nums = map { $_->value } @$args;
 #			my $result = Math::BigRat->new(shift @arg_nums);
 #			while (@arg_nums) {
