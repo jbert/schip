@@ -3,6 +3,8 @@
 	use Moose;
 
 	has 'type'	=> (is => 'rw', isa => 'Str');
+
+	sub description { die "Abstract node doesn't have a description"; }
 }
 
 {
@@ -10,6 +12,8 @@
 	use Moose;
 
 	extends qw(Schip::AST::Node);
+
+	sub description { 'atomic'; }
 }
 
 {
@@ -25,6 +29,8 @@
 		my $self = shift;
 		return $self->value;
 	}
+
+	sub description { 'numeric'; }
 }
 
 {
@@ -38,6 +44,8 @@
 		my $self = shift;
 		return $self->value;
 	}
+
+	sub description { 'symbolic'; }
 }
 
 {
@@ -65,6 +73,8 @@
 		$str =~ s/"/\\"/g;
 		return $str;
 	}
+
+	sub description { 'string'; }
 }
 
 {
@@ -81,5 +91,7 @@
 		my $self = shift;
 		return "(" . $self->value->map(sub {$_->to_string})->join(" ") . ")";
 	}
+
+	sub description { 'list'; }
 }
 1;
