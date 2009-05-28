@@ -26,7 +26,7 @@ isa_ok($tree->value->[0], 'Schip::AST::Sym', "display -> symbol");
 is($tree->value->[0]->value, "display", "with correct value");
 
 isa_ok($tree->value->[1], 'Schip::AST::Str', "string -> str");
-is($tree->value->[1]->value, '"hello, world"', "with correct value");
+is($tree->value->[1]->value, 'hello, world', "with correct value");
 
 
 note "parse string with quotes";
@@ -41,7 +41,7 @@ isa_ok($tree->value->[0], 'Schip::AST::Sym', "display -> symbol");
 is($tree->value->[0]->value, "display", "with correct value");
 
 isa_ok($tree->value->[1], 'Schip::AST::Str', "string -> str");
-is($tree->value->[1]->value, '"hello, \\"world\\""', "with correct value");
+is($tree->value->[1]->value, 'hello, \"world\"', "with correct value");
 
 
 my %atom_type = (

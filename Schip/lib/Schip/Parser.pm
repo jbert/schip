@@ -56,7 +56,8 @@ sub _parse_atom {
 	my $type;
 	given ($token) {
 		when (/^-?[\.\d]+$/)	{ $type = 'Num' };
-		when (/^\".*\"$/)		{ $type = 'Str' };
+		when (/^\"(.*)\"$/)		{ $type = 'Str';
+								  $token = $1   };
 		default					{ $type = 'Sym' };
 	}
 	$type = "Schip::AST::$type";
@@ -85,6 +86,7 @@ sub _tokenize_string {
 		push @tokens, split(//, $start_parens), $token, split(//, $end_parens);
 	}
 	die "NO_TOKENS" unless @tokens;
+#	say "tokens are: " . join(", ", @tokens);
 	return \@tokens;
 }
 
