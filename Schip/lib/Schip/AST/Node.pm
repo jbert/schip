@@ -58,12 +58,7 @@
 	sub to_string {
 		my $self = shift;
 		my $val = $self->value;
-		if ($val =~ /^\d+$/) {
-			return $val;
-		}
-		else {
-			return '"' . $self->_escape_quotes . '"';
-		}
+		return '"' . $self->_escape_quotes . '"';
 	}
 
 	sub _escape_quotes {
