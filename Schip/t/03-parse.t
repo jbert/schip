@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 53;
+use Test::More tests => 63;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -87,3 +87,22 @@ isa_ok($body->value->[1], 'Schip::AST::Num', "2 -> symbol");
 is($body->value->[2]->value, "x", "with correct value");
 isa_ok($body->value->[2], 'Schip::AST::Sym', "x -> symbol");
 is($tree->to_string, $code, "deparse correctly");
+
+note "parse the empty list";
+$code = "()";
+$tree = $parser->parse($code);
+ok($tree, "can parse code");
+isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 0, "root has 0 children");
+
+note "parse a list with empty string";
+$code = '("")';
+$tree = $parser->parse($code);
+ok($tree, "can parse code");
+isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 1, "root has 0 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Str', "found string");
+is($tree->value->[0]->value, "", "and it's empty");

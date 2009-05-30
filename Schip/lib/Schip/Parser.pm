@@ -83,7 +83,9 @@ sub _tokenize_string {
 		next RAW_TOKEN unless defined $token;
 		$start_parens	||= '';
 		$end_parens		||= '';
-		push @tokens, split(//, $start_parens), $token, split(//, $end_parens);
+		push @tokens, split(//, $start_parens);
+		push @tokens, $token if defined $token && $token ne '';
+		push @tokens, split(//, $end_parens);
 	}
 	die "NO_TOKENS" unless @tokens;
 #	say "tokens are: " . join(", ", @tokens);
