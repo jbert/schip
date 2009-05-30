@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 94;
+use Test::More tests => 151;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -19,7 +19,23 @@ sub run_main_tests {
 	test_define();
 	test_lambda();
 	test_closure();
-#	test_if();
+	test_quote();
+	test_if();
+}
+
+sub test_quote {
+	my @test_cases = (
+		"()"				=> undef,
+		"(quote 0)"			=> 0,
+		"(quote 1)"			=> 1,
+		"(quote 5)"			=> 5,
+		'(quote "hello")'	=> "hello",
+		"(quote ())"		=> [],
+		"(1 2 3)"			=> undef,
+		"(quote (1 2 3))"	=> [1, 2, 3],
+	);
+
+	run_test_cases("test quote", @test_cases);
 }
 
 sub test_primitives {
@@ -118,13 +134,25 @@ sub test_closure {
 sub test_if {
 	my @test_cases = (
 		# if
-		"(/ 1 0)"						=> undef,
+		"(error)"						=> undef,
 		"(if 0 1 2)"					=> 2,
 		"(if 1 1 2)"					=> 1,
-		"(if 0 1 2)"					=> 1,
+
+		# Perl semantics here?
+		'(if "foo" 1 2)'				=> 1,
+		'(if "0" 1 2)'					=> 1,
+		'(if "" 1 2)'					=> 2,
+		"(if (quote ()) 1 2)"			=> 2,
+		# TODO: add empty list?
+		# TODO: add #t and #f bool type
+
+
+		"(if 0 (+ 2 3) (+ 4 5))"		=> 9,
+
+		'(if (error) 1 2)'				=> undef,
+		"(if 0 (error) 2)"				=> 2,
+		"(if 1 (error) 2)"				=> undef,
 		
-#		"(define x 2)\n(begin 0 x)"		=> 2,
-#		"(define x 2)\n(+ 3 x)"			=> 5,
 	);
 	run_test_cases("test if", @test_cases);
 }
@@ -152,7 +180,26 @@ sub run_test_cases {
 		if (defined $expected) {
 			ok($result, "form evaluated ok");
 			note("failed with errstr: " . $evaluator->errstr) if !$result;
-			is($result->value, $expected, "form [$code] evaluates to expected val");
+			if (ref $expected) {
+				if (ref $expected eq 'ARRAY') {
+					# TODO - support nesting
+					isa_ok($result, 'Schip::AST::List', "got a list value");
+					is($result->value->length,
+						scalar @$expected,
+						"got a list the right length " . scalar @$expected);
+					while(@$expected) {
+						my $expected_val = shift @$expected;
+						my $got = $result->value->shift;
+						is($got->value, $expected_val, "index is correct");
+					}
+				}
+				else {
+					die "Non-array ref in expected value";
+				}
+			}
+			else {
+				is($result->value, $expected, "form [$code] evaluates to expected val");
+			}
 		}
 		else {
 			# TODO: check errstr, line # etc

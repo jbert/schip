@@ -43,7 +43,8 @@ DONE - schip.parser
 		DONE - define 
 			- introduces new lexical binding - is that what we want?
 		DONE - lambda
-		- if
+		DONE - quote
+		DONE - if
 		- defmacro
 		- let (primitive or special form? define in terms of lambda?)
 	- primitives
@@ -53,6 +54,7 @@ DONE - schip.parser
 		- #t and #f parse to s.ast.bool
 		- is a bool a number? (No, you don't want addition etc)
 		- coerce arg to 'if' to boolean
+		- (or just add is_true method to s.ast?)
 
 
 

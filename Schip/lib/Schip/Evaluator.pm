@@ -4,6 +4,7 @@ use Moose::Autobox;
 use List::MoreUtils qw(all);
 use List::Util qw(sum);
 use Schip::Env;
+use 5.10.0;
 
 {
 	package Schip::Evaluator::Invokable;
@@ -156,6 +157,31 @@ my %special_forms = (
 			env		=> $eval->env->clone,
 		);
 	},
+	quote		=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		die_error("Not exactly one arg to quote") unless scalar @$args == 1;
+		return $args->[0];
+	},
+	if			=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		my $condition	= shift @$args;
+		my $trueform	= shift @$args;
+		my $falseform	= shift @$args;
+		die_error("No true branch")		unless $trueform;
+		die_error("No false branch")	unless $falseform;
+		my $result 		= $eval->_evaluate_form($condition);
+		return unless $result;
+		if (__PACKAGE__->_value_is_true($result)) {
+			return $eval->_evaluate_form($trueform);
+		}
+		else {
+			return $eval->_evaluate_form($falseform);
+		}
+	},
 );
 
 sub _lookup_special_form {
@@ -234,6 +260,22 @@ sub _install_primitives {
 #	$env->push_frame('/' => $divide);
 
 	return $env;
+}
+
+# Hack, hack, hacketty hack.
+# TODO: Should this be a method on s.ast.node? (fits nicely, but that embeds evaluator semantics
+# into the syntax node.
+# Should we have an s.ast.bool type and a way of coercing other types to that?
+sub _value_is_true {
+	my $class = shift;
+	my $node  = shift;
+	given ($node) {
+		when ($_->isa('Schip::AST::List'))	{ return $_->value->length > 0; }
+		when ($_->isa('Schip::AST::Num')) 	{ return $_->value != 0; }
+		when ($_->isa('Schip::AST::Str')) 	{ return $_->value ne ""; }
+		when ($_->isa('Schip::AST::Sym'))	{ return 1; }
+		default								{ die_error("Unhandled truth case"); }
+	}
 }
 
 sub die_error {
