@@ -14,7 +14,7 @@ DONE - schip.environment
 DONE - schip.run.value
 	- just isa schip.ast.node for now, since we're interpreting
 
-- how to handle closures?
+DONE - how to handle closures?
 	- lamdba contains ref to env?
 
 DONE - schip.parser

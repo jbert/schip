@@ -241,6 +241,15 @@ sub _install_primitives {
 	);
 	$env->push_frame('error' => $error);
 
+	my $list = Schip::Evaluator::Primitive->new(
+		code => sub {
+			my $args = shift;
+			return Schip::AST::List->new(value => $args);
+		}
+	);
+	$env->push_frame('list' => $list);
+
+
 	# TODO - pull to seperate module
 #	use Math::BigRat;
 #	my $divide = Schip::Evaluator::Primitive->new(

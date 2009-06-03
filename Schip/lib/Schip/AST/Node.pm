@@ -89,4 +89,16 @@
 
 	sub description { 'list'; }
 }
+
+{
+	package Schip::AST::Pair;
+	use Moose;
+	use Moose::Autobox;
+
+	# A pair is just a list whose cdr isn't a list
+	extends qw(Schip::AST::List);
+
+	sub description { 'pair'; }
+}
+
 1;
