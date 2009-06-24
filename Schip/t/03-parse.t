@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 78;
+use Test::More tests => 79;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -131,3 +131,6 @@ is($tree->value->[0]->value, 'quote', "first child is a sym called quote");
 isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
 is($tree->value->[1]->value->length, 3, "second child has 3 elements");
 
+$code = "(a '(b c))";
+$tree = $parser->parse($code);
+is($tree->to_string, "(a (quote (b c)))", "deparse correctly");

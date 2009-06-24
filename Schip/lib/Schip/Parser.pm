@@ -28,7 +28,20 @@ sub _parse_one_form {
 	die "EMPTY_STREAM" unless scalar @$tokens;
 	return $self->_parse_list($tokens) 
 		if $tokens->[0] eq "(";
+	return $self->_parse_quoted($tokens) 
+		if $tokens->[0] eq "'";
 	return $self->_parse_atom(shift @$tokens);
+}
+
+sub _parse_quoted {
+	my $self         = shift;
+	my $tokens        = shift;
+
+	die "NO_QUOTE_START" unless $tokens->[0] eq "'";
+	shift @$tokens;
+	unshift @$tokens, "(", "quote";
+	push    @$tokens, ")";
+	return $self->_parse_list($tokens);
 }
 
 sub _parse_list {
@@ -71,23 +84,19 @@ sub _tokenize_string {
 	my @raw_tokens = my_parse_line('\s+', 1, $code_str);
 	die "NO_TOKENS" unless @raw_tokens;
 
-	if (@raw_tokens && $raw_tokens[0] =~ s/^'//) {
-		unshift @raw_tokens, "(quote";
-		push @raw_tokens, ")";
-	}
 	my @tokens;
 RAW_TOKEN:
 	while (defined (my $raw_token = shift @raw_tokens)) {
 		next RAW_TOKEN unless defined $raw_token;
 		my ($start_parens, $token, $end_parens)
 			= $raw_token =~ /^
-			(\(*)
+			(['\(]*)
 			([^\)]*)
 			(\)*)
 			$/x;
 		next RAW_TOKEN unless defined $token;
-		$start_parens        ||= '';
-		$end_parens                ||= '';
+		$start_parens ||= '';
+		$end_parens   ||= '';
 		push @tokens, split(//, $start_parens);
 		push @tokens, $token if defined $token && $token ne '';
 		push @tokens, split(//, $end_parens);
