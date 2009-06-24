@@ -250,6 +250,23 @@ sub _install_primitives {
 	$env->push_frame('list' => $list);
 
 
+	my $cons = Schip::Evaluator::Primitive->new(
+		code => sub {
+			my $args = shift;
+			die_error("cons called with != 2 args") if @$args != 2;
+			my $car = shift @$args;
+			my $cdr = shift @$args;
+			# Consing with a list in cdr gives you a list
+			if ($cdr->isa('Schip::AST::List')) {
+				return Schip::AST::List->new(value => [$car, @{$cdr->value}]);
+			}
+			else {
+				return Schip::AST::Pair->new(value => [$car, $cdr]);
+			}
+		}
+	);
+	$env->push_frame('cons' => $cons);
+
 	# TODO - pull to seperate module
 #	use Math::BigRat;
 #	my $divide = Schip::Evaluator::Primitive->new(

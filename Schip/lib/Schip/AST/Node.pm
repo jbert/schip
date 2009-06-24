@@ -5,6 +5,8 @@
 	has 'type'	=> (is => 'rw', isa => 'Str');
 
 	sub description { die "Abstract node doesn't have a description"; }
+
+	sub equals		{ die "Abstract node can't compare for equality"; }
 }
 
 {
@@ -14,6 +16,12 @@
 	extends qw(Schip::AST::Node);
 
 	sub description { 'atomic'; }
+
+	sub equals { 
+		my $self = shift;
+		my $rhs  = shift;
+		return ref $self eq ref $rhs && $self->value eq $rhs->value;
+	}
 }
 
 {
@@ -73,7 +81,7 @@
 }
 
 {
-	package Schip::AST::List;
+	package Schip::AST::Pair;
 	use Moose;
 	use Moose::Autobox;
 
@@ -84,21 +92,46 @@
 
 	sub to_string {
 		my $self = shift;
+		return "(" . $self->value->[0]->to_string . " . " . $self->value->[1]->to_string . ")";
+	}
+
+	sub description { 'pair'; }
+
+	sub equals {
+		my $self = shift;
+		my $rhs  = shift;
+		return ref $self eq ref $rhs
+			&& $self->value->[0]->equals($rhs->value->[0])
+			&& $self->value->[1]->equals($rhs->value->[1]);
+	}
+}
+
+{
+	package Schip::AST::List;
+	use Moose;
+	use Moose::Autobox;
+
+	# A list is just a pair whose cdr is also a list
+	extends qw(Schip::AST::Pair);
+
+	sub to_string {
+		my $self = shift;
 		return "(" . $self->value->map(sub {$_->to_string})->join(" ") . ")";
 	}
 
 	sub description { 'list'; }
-}
 
-{
-	package Schip::AST::Pair;
-	use Moose;
-	use Moose::Autobox;
+	sub equals {
+		my $self = shift;
+		my $rhs  = shift;
 
-	# A pair is just a list whose cdr isn't a list
-	extends qw(Schip::AST::List);
-
-	sub description { 'pair'; }
+		return 0 unless ref $self eq ref $rhs;
+		return 0 unless $self->value->length == $rhs->value->length;
+		for my $i (0..($self->value->length - 1)) {
+			return 0 unless $self->value->[$i] == $rhs->value->[$i];
+		}
+		return 1;
+	}
 }
 
 1;

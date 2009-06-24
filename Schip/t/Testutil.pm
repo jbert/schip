@@ -12,13 +12,19 @@ sub run_test_cases {
 		my $code		= shift @test_cases;
 		my $expected	= shift @test_cases;
 
+		my $expectedDeparse = $code;
+		$expectedDeparse	=~ s/\s+/ /g;
+
+		if (ref $expected && ref $expected eq 'HASH') {
+			$expectedDeparse = $expected->{deparse} if $expected->{deparse};
+			$expected		 = $expected->{value};
+		}
+
 		note("Checking $code");
 
 		my $tree		= $parser->parse($code);
 		my $deparse		= $tree->to_string;
-		my $mungedCode  = $code;
-		$mungedCode =~ s/\s+/ /g;
-		is($deparse, $mungedCode, "parsed code deparses to same string");
+		is($deparse, $expectedDeparse, "parsed code deparses to same string");
 		my $evaluator	= Schip::Evaluator->new;
 		my $result		= $evaluator->evaluate_form($tree);
 		if (defined $expected) {
@@ -37,8 +43,12 @@ sub run_test_cases {
 						is($got->value, $expected_val, "index is correct");
 					}
 				}
+				elsif ($expected->isa('Schip::AST::Node')) {
+					ok($expected->equals($result), "values compare ok")
+						|| diag "got " . $result->to_string . " not " . $expected->to_string;
+				}
 				else {
-					die "Non-array ref in expected value";
+					die "Non-array ref [$expected] in expected value";
 				}
 			}
 			else {

@@ -13,7 +13,7 @@ exit 0;
 sub run_main_tests {
 	test_plus();
 	test_list();
-#	test_cons_car_cdr();
+	test_cons_car_cdr();
 }
 
 sub test_list {
@@ -29,20 +29,31 @@ sub test_list {
 
 sub test_cons_car_cdr {
 	my @test_cases = (
-		"(cons 1 '())"			=> [1],
-		"(cons 1 (cons 2 '()))"	=> [1, 2],
+		# Consing with '() makes a list
+		"(cons 1 '())"			=> {deparse => '(cons 1 (quote ()))', value => [1]},
+		"(cons 1 (cons 2 '()))"	=> {deparse => '(cons 1 (cons 2 (quote ())))', value => [1, 2]},
+		# Consing otherwise makes a pair
 		'(cons 1 2)'			=> Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 1),
-																   Schip::AST::Num->new(value => 1)]),
+																   Schip::AST::Num->new(value => 2)]),
 
 		# car and cdr of pair
 		'(car (cons 1 2))'		=> 1,
 		'(cdr (cons 1 2))'		=> 2,
 
 		# car and cdr of a list
-		"(car (cons 1 '()))"	=> 1,
-		"(cdr (cons 1 '()))"	=> [],
-		"(car (cons 1 (cons 2 '())))"	=> 1,
-		"(cdr (cons 1 (cons 2 '())))"	=> [],
+		"(car (1ist 1)"	=> 1,
+		"(cdr (list 1)" => [],
+		# and a bigger list
+		"(car (list 1 2))"			=> 1,
+		"(cdr (list 1 2))"			=> [2],
+		"(car (cdr (list 1 2))"			=> 2,
+		"(cdr (cdr (list 1 2))"			=> [],
+
+		# Extending list doesn't change it
+		'(begin
+			(define a (list 1 2 3))
+		 	(define b (cons "b" a))
+			a)'						=> [1, 2, 3],
 
 	);
 
