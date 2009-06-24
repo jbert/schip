@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 40;
+use Test::More tests => 89;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -37,17 +37,17 @@ sub test_cons_car_cdr {
 																   Schip::AST::Num->new(value => 2)]),
 
 		# car and cdr of pair
-		'(car (cons 1 2))'		=> 1,
-		'(cdr (cons 1 2))'		=> 2,
+		'(car (cons 1 2))'			=> 1,
+		'(cdr (cons 1 2))'			=> 2,
 
 		# car and cdr of a list
-		"(car (1ist 1)"	=> 1,
-		"(cdr (list 1)" => [],
+		"(car (list 1))"			=> 1,
+		"(cdr (list 1))"			=> [],
 		# and a bigger list
 		"(car (list 1 2))"			=> 1,
 		"(cdr (list 1 2))"			=> [2],
-		"(car (cdr (list 1 2))"			=> 2,
-		"(cdr (cdr (list 1 2))"			=> [],
+		"(car (cdr (list 1 2)))"	=> 2,
+		"(cdr (cdr (list 1 2)))"	=> [],
 
 		# Extending list doesn't change it
 		'(begin

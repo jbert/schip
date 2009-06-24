@@ -249,7 +249,6 @@ sub _install_primitives {
 	);
 	$env->push_frame('list' => $list);
 
-
 	my $cons = Schip::Evaluator::Primitive->new(
 		code => sub {
 			my $args = shift;
@@ -266,6 +265,53 @@ sub _install_primitives {
 		}
 	);
 	$env->push_frame('cons' => $cons);
+
+	my $car = Schip::Evaluator::Primitive->new(
+		code => sub {
+			my $args = shift;
+			die_error("car called with != 1 args")	if @$args != 1;
+			die_error("car called on non-pair: " . ref $args->[0])
+				unless $args->[0]->isa('Schip::AST::Pair');
+			my $list = shift @$args;
+			# Controversial?
+			die "car of empty list" if $list->value->length == 0;
+			return $list->value->[0];
+		}
+	);
+	$env->push_frame('car' => $car);
+
+	my $cdr = Schip::Evaluator::Primitive->new(
+		code => sub {
+			my $args = shift;
+			die_error("cdr called with != 1 args")	if @$args != 1;
+			die_error("car called on non-pair: " . ref $args->[0])
+				unless $args->[0]->isa('Schip::AST::Pair');
+			my $list = shift @$args;
+			die "cdr of empty list" if $list->value->length == 0;
+			if ($list->value->length == 1) {
+				# Should we have a global, static object for the null list?
+				return Schip::AST::List->new(value => []);
+			}
+			else {
+				# Symettric to conditional in cons.
+				if ($list->isa('Schip::AST::List')) {
+					# Shallow copy
+					my @newlist;
+					push @newlist, $_ for @{$list->value};
+					shift @newlist;
+					return Schip::AST::List->new(value => \@newlist);
+				}
+				elsif ($list->isa('Schip::AST::Pair')) {
+					return $list->value->[1];
+				}
+				else {
+					die_error("Unknown type in cdr: " . ref($list->value));
+				}
+			}
+			return $list->value->[0];
+		}
+	);
+	$env->push_frame('cdr' => $cdr);
 
 	# TODO - pull to seperate module
 #	use Math::BigRat;
