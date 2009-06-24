@@ -8,8 +8,8 @@ use MooseX::NonMoose;
 extends qw(Class::ErrorHandler);
 
 sub parse {
-	my $self		= shift;
-	my $code_str	= shift;
+	my $self                = shift;
+	my $code_str        = shift;
 	my $form;
 	eval {
 		my $tokens = $self->_tokenize_string($code_str);
@@ -22,8 +22,8 @@ sub parse {
 }
 
 sub _parse_one_form {
-	my $self	= shift;
-	my $tokens	= shift;
+	my $self        = shift;
+	my $tokens        = shift;
 
 	die "EMPTY_STREAM" unless scalar @$tokens;
 	return $self->_parse_list($tokens) 
@@ -32,14 +32,14 @@ sub _parse_one_form {
 }
 
 sub _parse_list {
-	my $self 	= shift;
-	my $tokens	= shift;
+	my $self         = shift;
+	my $tokens        = shift;
 
 	die "NO_LIST_START" unless $tokens->[0] eq '(';
 	shift @$tokens;
 
 	my @contents;
-	LIST_ITEM:
+LIST_ITEM:
 	while (scalar @$tokens) {
 		if ($tokens->[0] eq ')') {
 			shift @$tokens;
@@ -51,45 +51,113 @@ sub _parse_list {
 }
 
 sub _parse_atom {
-	my $self	= shift;
-	my $token	= shift;
+	my $self        = shift;
+	my $token        = shift;
 	my $type;
 	given ($token) {
-		when (/^-?[\.\d]+$/)	{ $type = 'Num' };
-		when (/^\"(.*)\"$/)		{ $type = 'Str';
-								  $token = $1   };
-		default					{ $type = 'Sym' };
+		when (/^-?[\.\d]+$/)        { $type = 'Num' };
+		when (/^\"(.*)\"$/)                { $type = 'Str';
+		$token = $1   };
+		default                                        { $type = 'Sym' };
 	}
 	$type = "Schip::AST::$type";
 	return $type->new(value => $token);
 }
 
 sub _tokenize_string {
-	my $self		= shift;
-	my $code_str	= shift;
+	my $self                = shift;
+	my $code_str        = shift;
 
-	my @raw_tokens = quotewords('\s+', 1, $code_str);
+	my @raw_tokens = my_parse_line('\s+', 1, $code_str);
 	die "NO_TOKENS" unless @raw_tokens;
+
+	if (@raw_tokens && $raw_tokens[0] =~ s/^'//) {
+		unshift @raw_tokens, "(quote";
+		push @raw_tokens, ")";
+	}
 	my @tokens;
-	RAW_TOKEN:
+RAW_TOKEN:
 	while (defined (my $raw_token = shift @raw_tokens)) {
 		next RAW_TOKEN unless defined $raw_token;
 		my ($start_parens, $token, $end_parens)
 			= $raw_token =~ /^
-							(\(*)
-							([^\)]*)
-							(\)*)
-							$/x;
+			(\(*)
+			([^\)]*)
+			(\)*)
+			$/x;
 		next RAW_TOKEN unless defined $token;
-		$start_parens	||= '';
-		$end_parens		||= '';
+		$start_parens        ||= '';
+		$end_parens                ||= '';
 		push @tokens, split(//, $start_parens);
 		push @tokens, $token if defined $token && $token ne '';
 		push @tokens, split(//, $end_parens);
 	}
 	die "NO_TOKENS" unless @tokens;
-#	say "tokens are: " . join(", ", @tokens);
+#        say "tokens are: " . join(", ", @tokens);
 	return \@tokens;
 }
+
+# Ripped off from Text::ParseWords, but changed to be double-quotes only (since
+# we want single quote for, well, quoting.
+# TODO: write a proper parser.
+sub my_parse_line {
+    my($delimiter, $keep, $line) = @_;
+    my($word, @pieces);
+
+    no warnings 'uninitialized';	# we will be testing undef strings
+
+    while (length($line)) {
+        # This pattern is optimised to be stack conservative on older perls.
+        # Do not refactor without being careful and testing it on very long strings.
+        # See Perl bug #42980 for an example of a stack busting input.
+        $line =~ s/^
+                    (?: 
+                        # double quoted string
+                        (")                             # $quote
+                        ((?>[^\\"]*(?:\\.[^\\"]*)*))"   # $quoted 
+                    |   # --OR--
+                        # unquoted string
+						(                               # $unquoted 
+                            (?:\\.|[^\\"])*?
+                        )		
+                        # followed by
+						(                               # $delim
+                            \Z(?!\n)                    # EOL
+                        |   # --OR--
+                            (?-x:$delimiter)            # delimiter
+                        |   # --OR--                    
+                            (?!^)(?=")               # a quote
+                        )  
+				    )//xs or return;				# extended layout                  
+
+        my ($quote, $quoted, $unquoted, $delim) = ($1,$2,$3,$4);
+
+		return() unless( defined($quote) || length($unquoted) || length($delim));
+
+        if ($keep) {
+		    $quoted = "$quote$quoted$quote";
+		}
+        else {
+		    $unquoted =~ s/\\(.)/$1/sg;
+		    if (defined $quote) {
+				$quoted =~ s/\\(.)/$1/sg if ($quote eq '"');
+            }
+		}
+        $word .= substr($line, 0, 0);	# leave results tainted
+        $word .= defined $quote ? $quoted : $unquoted;
+ 
+        if (length($delim)) {
+            push(@pieces, $word);
+            push(@pieces, $delim) if ($keep eq 'delimiters');
+            undef $word;
+        }
+        if (!length($line)) {
+            push(@pieces, $word);
+		}
+    }
+    return(@pieces);
+}
+
+
 
 1;

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 63;
+use Test::More tests => 78;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -96,6 +96,18 @@ isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
 is($tree->value->length, 0, "root has 0 children");
 
+note "parse the quoted empty list";
+$code = "'()";
+$tree = $parser->parse($code);
+ok($tree, "can parse code");
+isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 2, "root has 2 children");
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'quote', "first val quote");
+isa_ok($tree->value->[1], 'Schip::AST::List', "second val list");
+is($tree->value->[1]->value->length, 0, "which is empty");
+
 note "parse a list with empty string";
 $code = '("")';
 $tree = $parser->parse($code);
@@ -106,3 +118,16 @@ is($tree->value->length, 1, "root has 0 children");
 
 isa_ok($tree->value->[0], 'Schip::AST::Str', "found string");
 is($tree->value->[0]->value, "", "and it's empty");
+
+$code = "'(a b c)";
+$tree = $parser->parse($code);
+ok($tree, "can parse quoted list");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 2, " has 2 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'quote', "first child is a sym called quote");
+
+isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
+is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+
