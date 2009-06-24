@@ -38,6 +38,8 @@ DONE - schip.parser
 		- decorate AST with line number (and col?)
 		- more uniform error reporting (typed exception?)
 
+	DONE - add REPL
+
 	- special forms
 		DONE - begin
 		DONE - define 
@@ -46,6 +48,7 @@ DONE - schip.parser
 		DONE - quote
 		DONE - if
 		- defmacro
+			- needs destructuring bind?
 		- let (primitive or special form? define in terms of lambda?)
 	- primitives
 		- cons/car/cdr (could do lambda implementation)
