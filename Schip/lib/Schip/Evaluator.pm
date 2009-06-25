@@ -54,6 +54,11 @@ use 5.10.0;
 		return $value;
 	}
 
+	sub to_string {
+		my $self = shift;
+		return "LAMBDA: $self";
+	}
+
 	package Schip::Evaluator::Error;
 	use Moose;
 
@@ -351,8 +356,8 @@ sub _value_is_true {
 }
 
 sub die_error {
-	my $error = shift;
-	die Schip::Evaluator::Error->new(info => $error);
+	my $error_str = shift;
+	die Schip::Evaluator::Error->new(info => $error_str);
 }
 
 sub errstr {
