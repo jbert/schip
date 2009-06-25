@@ -116,17 +116,17 @@ sub _evaluate_list {
 	my $self		= shift;
 	my $list_form	= shift;
 
-	my $values	= $list_form->value;
-	my $car		= shift @$values;
+	my @values	= @{$list_form->value};
+	my $car		= shift @values;
 
 	my $form_handler = $self->_lookup_special_form($car);
-	return $form_handler->($self, $values) if $form_handler;
+	return $form_handler->($self, \@values) if $form_handler;
 
 	my $carVal	= $self->_evaluate_form($car);
 	die_error("Symbol in car position is not invokable: " . $car->value)
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
-	my @evaluated_args = map { $self->_evaluate_form($_) } @$values;
+	my @evaluated_args = map { $self->_evaluate_form($_) } @values;
 	return $carVal->invoke(\@evaluated_args);
 }
 
@@ -142,9 +142,9 @@ my %special_forms = (
 		my $eval = shift;
 		my $args = shift;
 
-		my $sym		= shift @$args;
+		my $sym		= $args->[0];
 		my $sym_str = $sym->value;
-		my $body	= shift @$args;
+		my $body	= $args->[1];
 		my $val 	= $eval->_evaluate_form($body);
 		$eval->env->push_frame($sym_str => $val);
 		return $val;
@@ -153,8 +153,8 @@ my %special_forms = (
 		my $eval = shift;
 		my $args = shift;
 
-		my $params	= shift @$args;
-		my $body	= shift @$args;
+		my $params	= $args->[0];
+		my $body	= $args->[1];
 
 		return Schip::Evaluator::Lambda->new(
 			params	=> $params,
@@ -173,9 +173,9 @@ my %special_forms = (
 		my $eval = shift;
 		my $args = shift;
 
-		my $condition	= shift @$args;
-		my $trueform	= shift @$args;
-		my $falseform	= shift @$args;
+		my $condition	= $args->[0];
+		my $trueform	= $args->[1];
+		my $falseform	= $args->[2];
 		die_error("No true branch")		unless $trueform;
 		die_error("No false branch")	unless $falseform;
 		my $result 		= $eval->_evaluate_form($condition);
@@ -258,8 +258,8 @@ sub _install_primitives {
 		code => sub {
 			my $args = shift;
 			die_error("cons called with != 2 args") if @$args != 2;
-			my $car = shift @$args;
-			my $cdr = shift @$args;
+			my $car = $args->[0];
+			my $cdr = $args->[1];
 			# Consing with a list in cdr gives you a list
 			if ($cdr->isa('Schip::AST::List')) {
 				return Schip::AST::List->new(value => [$car, @{$cdr->value}]);
@@ -277,7 +277,7 @@ sub _install_primitives {
 			die_error("car called with != 1 args")	if @$args != 1;
 			die_error("car called on non-pair: " . ref $args->[0])
 				unless $args->[0]->isa('Schip::AST::Pair');
-			my $list = shift @$args;
+			my $list = $args->[0];
 			# Controversial?
 			die "car of empty list" if $list->value->length == 0;
 			return $list->value->[0];
@@ -291,7 +291,7 @@ sub _install_primitives {
 			die_error("cdr called with != 1 args")	if @$args != 1;
 			die_error("car called on non-pair: " . ref $args->[0])
 				unless $args->[0]->isa('Schip::AST::Pair');
-			my $list = shift @$args;
+			my $list = $args->[0];
 			die "cdr of empty list" if $list->value->length == 0;
 			if ($list->value->length == 1) {
 				# Should we have a global, static object for the null list?
@@ -300,9 +300,7 @@ sub _install_primitives {
 			else {
 				# Symettric to conditional in cons.
 				if ($list->isa('Schip::AST::List')) {
-					# Shallow copy
-					my @newlist;
-					push @newlist, $_ for @{$list->value};
+					my @newlist = @{$list->value};
 					shift @newlist;
 					return Schip::AST::List->new(value => \@newlist);
 				}

@@ -29,7 +29,7 @@ EOC
 foreach my $tc (@test_cases) {
 	my $code				= $tc->{code};
 	my $expected_response	= $tc->{resp};
-	my $response;
+	my $response = '';
 
 	open(my $repl_infh, '<', \$code)			or die "can't open repl infh";
 	open(my $repl_outfh, '>', \$response)		or die "can't open repl outfh";
