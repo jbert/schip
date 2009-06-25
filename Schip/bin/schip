@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Schip::Repl;
+
+my $repl = Schip::Repl->new;
+$repl->run;
