@@ -36,7 +36,6 @@ use 5.10.0;
 		my $self = shift;
 		my $args = shift;
 
-		my $env = $self->env;
 		my @params = @{$self->params->value};
 		my @args   = @{$args};
 		die "Got " . (scalar @args) . " args but expected " . scalar (@params)
@@ -47,6 +46,7 @@ use 5.10.0;
 			my $arg		= shift @args;
 			$frame{$param->value} = $arg;
 		}
+		my $env = $self->env;
 		$env->push_frame(%frame);
 		my $evaluator = Schip::Evaluator->new(env => $self->env);
 		my $value = $evaluator->_evaluate_form($self->body);

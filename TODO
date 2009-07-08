@@ -1,15 +1,3 @@
-- lambdas are one-shot?
-	- in REPL:
-		schip> (define double (lambda (x) (+ x x)))
-LAMBDA: Schip::Evaluator::Lambda=HASH(0x1bead18)
-schip> (double 10)
-20
-schip> (double (+ 2 3))
-Evaluation error: Symbol in car position is not invokable: x
-schip> (double 10)
-Evaluation error: Symbol in car position is not invokable: x
-schip> 
-
 DONE - schip.ast.node
 	- s.a.atom (type=atom, value=string)
 	- s.a.list (type=list, value=aref of ref-to-s.a.n)

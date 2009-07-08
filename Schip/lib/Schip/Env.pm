@@ -15,7 +15,7 @@ sub frame_depth {
 
 sub pop_frame {
 	my $self = shift;
-	$self->_frames->pop;
+	$self->_frames->shift;
 }
 
 sub push_frame {
