@@ -3,5 +3,20 @@ use strict;
 use warnings;
 use Schip::Repl;
 
-my $repl = Schip::Repl->new;
-$repl->run;
+my $file = shift;
+if ($file) {
+	open (my $fh, '<', $file) or die "can't open file $file : $!";
+	local $/ = undef;
+	my $code = <$fh>;
+	close $fh or die "problem closing file $file : $!";
+	my $parser		= Schip::Parser->new;
+	my $tree		= $parser->parse($code);
+	die "Failed to parse: " . $parser->errstr unless $tree;
+	my $evaluator	= Schip::Evaluator->new;
+	my $result		= $evaluator->evaluate_form($tree);
+	die "Failed to evaluate: " . $evaluator->errstr unless $result;
+}
+else {
+	my $repl = Schip::Repl->new;
+	$repl->run;
+}
