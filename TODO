@@ -1,3 +1,8 @@
+- write/grab some more examples
+- compare output undef 'schip' and 'mzscheme -f'
+	- correctness (stdout) and start measuring performance :-)
+- project euler?
+
 DONE - schip.ast.node
 	- s.a.atom (type=atom, value=string)
 	- s.a.list (type=list, value=aref of ref-to-s.a.n)
