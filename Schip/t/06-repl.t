@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 12;
+use Test::More tests => 18;
 
 use_ok('Schip::Repl');
 
@@ -20,6 +20,16 @@ push @test_cases, {
 	code => <<"EOC",
 (define a 10)
 (define f (lambda (x) (+ x x)))
+(f 10)
+(f 10)
+EOC
+	resp => {1 => "10", 3 => "20", 4 => "20",}
+};
+
+push @test_cases, {
+	code => <<"EOC",
+(define a 10)
+(define (f x) (+ x x)))
 (f 10)
 (f 10)
 EOC

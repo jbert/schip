@@ -83,10 +83,26 @@ my %special_forms = (
 	define		=> sub {
 		my $eval = shift;
 		my $args = shift;
+		my $sym  = $args->[0];
 
-		my $sym		= $args->[0];
-		my $sym_str = $sym->value;
-		my $body	= $args->[1];
+		my ($sym_str, $body);
+		if ($sym->isa('Schip::AST::List')) {
+			# (define (foo x y) expr) form
+			my $deflist = $sym;
+			$sym_str	= $deflist->value->[0]->value;
+			my @copy	= @{$deflist->value};
+			shift @copy;
+			$body 		= Schip::AST::List->new(value => [
+				Schip::AST::Sym->new(value => 'lambda'),
+				Schip::AST::List->new(value => \@copy),
+				$args->[1],
+			]);
+		}
+		else {
+			# (define sym expr) form
+			$sym_str	= $sym->value;
+			$body		= $args->[1];
+		}
 		my $val 	= $eval->_evaluate_form($body);
 		$eval->env->push_frame($sym_str => $val);
 		return $val;
