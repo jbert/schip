@@ -18,7 +18,7 @@ sub install {
 
 	my %frame;
 	foreach my $op (
-		qw(plus error),
+		qw(plus equals error),
 		qw(cons car cdr list),
 		) {
 		my $subclass = "Schip::Evaluator::Primitive::" . ucfirst $op;
@@ -27,6 +27,19 @@ sub install {
 	}
 	$env->push_frame(%frame);
 	return $env;
+}
+
+sub die_numargs {
+	my ($self, $args, $num_args, $atleast) = @_;
+	if ($atleast) {
+		$self->die_error(ucfirst($self->symbol) . " called with < " . $num_args . " arg")
+			if @$args < $num_args;
+	}
+	else {
+		$self->die_error(ucfirst($self->symbol) . " called with != " . $num_args . " arg")
+			if @$args != $num_args;
+	}
+	return;
 }
 
 sub die_unless_type {
@@ -61,13 +74,39 @@ sub die_error {
 	sub symbol { '+' }
 
 
+	package Schip::Evaluator::Primitive::Equals;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_numargs($args, 2, 1);
+		$self->die_unless_type('Num', $args);
+		# Controversal? have seperate bool type?
+
+		my $first_val = $args->[0]->value;
+		my @copy = @$args;
+		shift @copy;
+		my $same = 1;
+VAL:
+		foreach my $val (@copy) {
+			if ($val->value != $first_val) {
+				$same = 0;
+				last VAL;
+			}
+		}
+		return Schip::AST::Num->new(value => $same);
+	}
+	sub symbol { '=' }
+
+
 	package Schip::Evaluator::Primitive::Error;
 	use Moose;
 	extends qw(Schip::Evaluator::Primitive);
 
 	sub code {
 		my ($self, $args) = @_;
-		$self->die_error("Error called with > 1 arg") if @$args > 1;
+		$self->die_numargs($args, 1);
 		$self->die_unless_type('Str', $args);
 		my ($str) = map { $_->value } @$args;
 		$str //= "Unspecified error";

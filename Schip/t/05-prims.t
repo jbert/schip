@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 89;
+use Test::More tests => 135;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -14,6 +14,37 @@ sub run_main_tests {
 	test_plus();
 	test_list();
 	test_cons_car_cdr();
+	test_equals();
+}
+
+sub test_equals {
+	my @test_cases = (
+		'(=)'						=> undef,
+		'(= 1)'						=> undef,
+
+		'(= 1 2)'					=> 0,
+
+		'(= 0 0)'					=> 1,
+		'(= 0 1)'					=> 0,
+		'(= 1 0)'					=> 0,
+		'(= 1 1)'					=> 1,
+
+		'(= 0 0 0)'					=> 1,
+		'(= 1 0 0)'					=> 0,
+		'(= 0 1 0)'					=> 0,
+		'(= 0 0 1)'					=> 0,
+		'(= 1 1 0)'					=> 0,
+		'(= 0 1 1)'					=> 0,
+		'(= 1 0 1)'					=> 0,
+		'(= 1 1 1)'					=> 1,
+		'(= 1 1 1)'					=> 1,
+
+#		'(= "a" "b")'				=> 0,
+#		'(= "a" "a")'				=> 1,
+#		'(= "a" 1)'					=> 0,
+#		'(= "a" 65)'				=> 0,
+	);
+	run_test_cases('equals', @test_cases);
 }
 
 sub test_list {

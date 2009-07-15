@@ -53,7 +53,7 @@ sub test_error {
 #		"(/ 2 0)"		=> undef,
 #		"(/ 1 10)"		=> "1/10",
 	);
-	run_test_cases("test plus", @test_cases);
+	run_test_cases("test error", @test_cases);
 }
 
 sub test_begin {
