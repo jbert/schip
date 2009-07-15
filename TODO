@@ -3,6 +3,14 @@
 	- correctness (stdout) and start measuring performance :-)
 - project euler?
 
+- extending primitives
+	- remove 'die_if_type' stuff and instead add type declarations to s.e.primitive
+		code => sub { ... }
+		args => 'All-Num', '2-Num'
+		?? can we use moose type checking for this ??
+	- add primitive name
+		- auto-register at new time
+
 DONE - schip.ast.node
 	- s.a.atom (type=atom, value=string)
 	- s.a.list (type=list, value=aref of ref-to-s.a.n)
