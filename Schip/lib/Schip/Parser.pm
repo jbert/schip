@@ -7,25 +7,39 @@ use MooseX::NonMoose;
 
 extends qw(Class::ErrorHandler);
 
+{
+	package Schip::Parser::Error;
+	use Moose;
+	has 'errstr'	=> (is => 'rw', isa => 'Str');
+}
+
 sub parse {
-	my $self                = shift;
-	my $code_str        = shift;
+	my $self     = shift;
+	my $code_str = shift;
 	my $form;
 	eval {
+		use Data::Dumper;
 		my $tokens = $self->_tokenize_string($code_str);
 		$form = $self->_parse_one_form($tokens);
 	};
 	if ($@) {
-		return $self->errstr($@);
+		die("Parse failed: $@") unless UNIVERSAL::isa($@, 'Schip::Parser::Error');
+		return $self->errstr($@->errstr);
 	}
 	return $form;
+}
+
+
+sub _die {
+	my $self = shift;
+	die Schip::Parser::Error->new(errstr => join(",", @_));
 }
 
 sub _parse_one_form {
 	my $self        = shift;
 	my $tokens        = shift;
 
-	die "EMPTY_STREAM" unless scalar @$tokens;
+	$self->_die("EMPTY_STREAM") unless scalar @$tokens;
 	return $self->_parse_list($tokens) 
 		if $tokens->[0] eq "(";
 	return $self->_parse_quoted($tokens) 
@@ -37,7 +51,7 @@ sub _parse_quoted {
 	my $self         = shift;
 	my $tokens        = shift;
 
-	die "NO_QUOTE_START" unless $tokens->[0] eq "'";
+	$self->_die("NO_QUOTE_START") unless $tokens->[0] eq "'";
 	shift @$tokens;
 	unshift @$tokens, "(", "quote";
 	push    @$tokens, ")";
@@ -48,7 +62,7 @@ sub _parse_list {
 	my $self         = shift;
 	my $tokens        = shift;
 
-	die "NO_LIST_START" unless $tokens->[0] eq '(';
+	$self->_die("NO_LIST_START") unless $tokens->[0] eq '(';
 	shift @$tokens;
 
 	my @contents;
@@ -82,7 +96,7 @@ sub _tokenize_string {
 	my $code_str        = shift;
 
 	my @raw_tokens = my_parse_line('\s+', 1, $code_str);
-	die "NO_TOKENS" unless @raw_tokens;
+	$self->_die("NO_TOKENS") unless @raw_tokens;
 
 	my @tokens;
 RAW_TOKEN:
@@ -101,7 +115,7 @@ RAW_TOKEN:
 		push @tokens, $token if defined $token && $token ne '';
 		push @tokens, split(//, $end_parens);
 	}
-	die "NO_TOKENS" unless @tokens;
+	$self->_die("NO_TOKENS") unless @tokens;
 #        say "tokens are: " . join(", ", @tokens);
 	return \@tokens;
 }
