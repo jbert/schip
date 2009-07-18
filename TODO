@@ -1,9 +1,28 @@
 - write/grab some more examples
-- compare output undef 'schip' and 'mzscheme -f'
-	- correctness (stdout) and start measuring performance :-)
-- project euler?
+	- project euler?
+	- compare output undef 'schip' and 'mzscheme -f'
+		- correctness (stdout) and start measuring performance :-)
+		- compare as autotest
 
-- extending primitives
+- add comments to parser (and tests).
+
+- fix recursion
+	- add (more) tests for recursion and (define (foo x) )
+	- add '-' (for fact)
+	- add display
+
+- add let (special form or rewrite to lambda?)
+	- consider deparse
+
+- add macros
+
+- design perl/scheme interop
+	- could make use of sigils to call out to perl vars
+		- or do we want more equivalence?
+	- need oo support in scheme?
+		- rip off arc/clojure?
+
+DONE - extending primitives
 	- remove 'die_if_type' stuff and instead add type declarations to s.e.primitive
 		code => sub { ... }
 		args => 'All-Num', '2-Num'
