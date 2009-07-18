@@ -11,7 +11,7 @@ if ($file) {
 	close $fh or die "problem closing file $file : $!";
 	my $parser		= Schip::Parser->new;
 	my @forms		= $parser->parse($code);
-	die "Failed to parse: " . $parser->errstr unless $tree;
+	die "Failed to parse: " . $parser->errstr unless @forms;
 	my $evaluator	= Schip::Evaluator->new;
 	my $result		= $evaluator->evaluate_forms(@forms);
 	die "Failed to evaluate: " . $evaluator->errstr unless $result;
