@@ -10,10 +10,10 @@ if ($file) {
 	my $code = <$fh>;
 	close $fh or die "problem closing file $file : $!";
 	my $parser		= Schip::Parser->new;
-	my $tree		= $parser->parse($code);
+	my @forms		= $parser->parse($code);
 	die "Failed to parse: " . $parser->errstr unless $tree;
 	my $evaluator	= Schip::Evaluator->new;
-	my $result		= $evaluator->evaluate_form($tree);
+	my $result		= $evaluator->evaluate_forms(@forms);
 	die "Failed to evaluate: " . $evaluator->errstr unless $result;
 }
 else {

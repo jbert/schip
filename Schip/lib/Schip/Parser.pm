@@ -16,17 +16,17 @@ extends qw(Class::ErrorHandler);
 sub parse {
 	my $self     = shift;
 	my $code_str = shift;
-	my $form;
+	my @forms;
 	eval {
 		use Data::Dumper;
 		my $tokens = $self->_tokenize_string($code_str);
-		$form = $self->_parse_one_form($tokens);
+		push @forms, $self->_parse_one_form($tokens) while @$tokens;
 	};
 	if ($@) {
 		die("Parse failed: $@") unless UNIVERSAL::isa($@, 'Schip::Parser::Error');
 		return $self->errstr($@->errstr);
 	}
-	return $form;
+	return wantarray ? @forms : $forms[0];
 }
 
 

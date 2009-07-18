@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 133;
+use Test::More tests => 173;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -161,7 +161,7 @@ sub test_atoms {
 		Schip::AST::Str->new(value => "hello"),
 	);
 	foreach my $atom (@self_evalating_atoms) {
-		my $result = $evaluator->evaluate_form($atom);
+		my $result = $evaluator->evaluate_forms($atom);
 		isa_ok($result, ref $atom, "result is same type as atom: "
 			. $atom->value);
 		is($result->value, $atom->value, "result has same value as atom");
@@ -172,7 +172,7 @@ sub test_two_plus_two {
 	my $two_plus_two_form = make_two_plus_two();
 	my $evaluator = Schip::Evaluator->new;
 	ok($evaluator, "can create evaluator");
-	my $result = $evaluator->evaluate_form($two_plus_two_form);
+	my $result = $evaluator->evaluate_forms($two_plus_two_form);
 	ok($result, "can get value back");
 	isa_ok($result, 'Schip::AST::Atom', "get back an atomic value");
 	isa_ok($result, 'Schip::AST::Num', "get back a numeric value");

@@ -1,3 +1,5 @@
+use strict;
+use warnings;
 use Moose::Autobox;
 use Schip::Parser;
 
@@ -22,11 +24,12 @@ sub run_test_cases {
 
 		note("Checking $code");
 
-		my $tree		= $parser->parse($code);
-		my $deparse		= $tree->to_string;
+		my @forms		= $parser->parse($code);
+		is (scalar @forms, 1, "only one form");	# Extend...
+		my $deparse		= $forms[0]->to_string;
 		is($deparse, $expectedDeparse, "parsed code deparses to same string");
 		my $evaluator	= Schip::Evaluator->new;
-		my $result		= $evaluator->evaluate_form($tree);
+		my $result		= $evaluator->evaluate_forms(@forms);
 		if (defined $expected) {
 			ok($result, "form evaluated ok");
 			note("failed with errstr: " . $evaluator->errstr) if !$result;

@@ -12,13 +12,15 @@ has 'env'		=> (is => 'rw',
 					isa => 'Schip::Env',
 					default => sub { return __PACKAGE__->make_initial_environment(); } );
 
-sub evaluate_form {
-	my $self = shift;
-	my $form = shift;
+sub evaluate_forms {
+	my $self  = shift;
+	my @forms = shift;
 
 	my $value;
 	eval {
-		$value = $self->_evaluate_form($form);
+		while (my $form = shift @forms) {
+			$value = $self->_evaluate_form($form);
+		}
 	};
 	if ($@) {
 		if (UNIVERSAL::isa($@, 'Schip::Evaluator::Error')) {

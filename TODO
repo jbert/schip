@@ -22,6 +22,10 @@
 	- need oo support in scheme?
 		- rip off arc/clojure?
 
+- cleanup horrible hack of scalar return from parser->parse. Old code wanted one 'tree',
+	newer code needs to know it can get back a list of trees (for full-parse of source file).
+	Fix: search for '$tree.*=.*->parse'
+
 DONE - extending primitives
 	- remove 'die_if_type' stuff and instead add type declarations to s.e.primitive
 		code => sub { ... }

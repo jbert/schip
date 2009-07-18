@@ -29,10 +29,10 @@ REPL:
 		last REPL if $line eq 'quit';
 
 		$command_count++;
-		my $tree = $self->_parser->parse($line);
+		my @forms = $self->_parser->parse($line);
 		my $response;
-		if ($tree) {
-			my $result = $self->_evaluator->evaluate_form($tree);
+		if (@forms) {
+			my $result = $self->_evaluator->evaluate_forms(@forms);
 			if ($result) {
 				$response = $result->to_string;
 			}
