@@ -13,8 +13,7 @@ has 'env'		=> (is => 'rw',
 					default => sub { return __PACKAGE__->make_initial_environment(); } );
 
 sub evaluate_forms {
-	my $self  = shift;
-	my @forms = shift;
+	my ($self, @forms) = @_;
 
 	my $value;
 	eval {
