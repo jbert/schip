@@ -18,7 +18,8 @@ sub install {
 
 	my %frame;
 	foreach my $op (
-		qw(plus equals error),
+		qw(error display newline),
+		qw(plus equals multiply),
 		qw(cons car cdr list),
 		) {
 		my $subclass = "Schip::Evaluator::Primitive::" . ucfirst $op;
@@ -74,6 +75,20 @@ sub die_error {
 	sub symbol { '+' }
 
 
+	package Schip::Evaluator::Primitive::Multiply;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_unless_type('Num', $args);
+		my $product = 1;
+		$product *= $_->value for @$args;
+		return Schip::AST::Num->new(value => $product);
+	}
+	sub symbol { '*' }
+
+
 	package Schip::Evaluator::Primitive::Equals;
 	use Moose;
 	extends qw(Schip::Evaluator::Primitive);
@@ -113,6 +128,32 @@ VAL:
 		$self->die_error($str);
 	}
 	sub symbol { 'error' }
+
+
+	package Schip::Evaluator::Primitive::Display;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_numargs($args, 1);
+		$self->die_unless_type('Str', $args);
+		my ($str) = map { $_->value } @$args;
+		print $str;
+	}
+	sub symbol { 'display' }
+
+
+	package Schip::Evaluator::Primitive::Newline;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_numargs($args, 0);
+		print "\n";
+	}
+	sub symbol { 'newline' }
 
 
 	package Schip::Evaluator::Primitive::List;
