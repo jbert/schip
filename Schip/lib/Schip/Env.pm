@@ -20,8 +20,7 @@ sub pop_frame {
 
 sub push_frame {
 	my $self = shift;
-	my %frame = @_;
-	$self->_frames->unshift(\%frame);
+	$self->_frames->unshift({@_});
 }
 
 sub lookup {
@@ -41,6 +40,19 @@ sub clone {
 	# frames, should we deep copy or not?)
 	$clone->_frames([ @{$self->_frames} ]);
 	return $clone;
+}
+
+sub replace_binding {
+	my $self = shift;
+	my $symbol = shift;
+	my $newval = shift;
+	foreach my $frame (@{$self->_frames}) {
+		if (exists $frame->{$symbol}) {
+			$frame->{$symbol} = $newval;
+			return 1;
+		}
+	}
+	return undef;
 }
 
 1;

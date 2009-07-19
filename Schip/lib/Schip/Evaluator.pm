@@ -104,8 +104,12 @@ my %special_forms = (
 			$sym_str	= $sym->value;
 			$body		= $args->[1];
 		}
-		my $val 	= $eval->_evaluate_form($body);
+		my $val = $eval->_evaluate_form($body);
 		$eval->env->push_frame($sym_str => $val);
+		if ($val->isa('Schip::Evaluator::Lambda')) {
+			# circular ref?
+			$val->env->push_frame($sym_str => $val);
+		}
 		return $val;
 	},
 	lambda		=> sub {

@@ -19,7 +19,7 @@ sub install {
 	my %frame;
 	foreach my $op (
 		qw(error display newline),
-		qw(plus equals multiply),
+		qw(add subtract equals multiply),
 		qw(cons car cdr list),
 		) {
 		my $subclass = "Schip::Evaluator::Primitive::" . ucfirst $op;
@@ -61,7 +61,7 @@ sub die_error {
 }
 
 {
-	package Schip::Evaluator::Primitive::Plus;
+	package Schip::Evaluator::Primitive::Add;
 	use Moose;
 	extends qw(Schip::Evaluator::Primitive);
 	use List::Util qw(sum);
@@ -73,6 +73,21 @@ sub die_error {
 		return Schip::AST::Num->new(value => $sum);
 	}
 	sub symbol { '+' }
+
+
+	package Schip::Evaluator::Primitive::Subtract;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_unless_type('Num', $args);
+		my $sum = $args->[0]->value;
+		shift @$args;
+		$sum -= $_->value for @$args;
+		return Schip::AST::Num->new(value => $sum);
+	}
+	sub symbol { '-' }
 
 
 	package Schip::Evaluator::Primitive::Multiply;
@@ -137,9 +152,7 @@ VAL:
 	sub code {
 		my ($self, $args) = @_;
 		$self->die_numargs($args, 1);
-		$self->die_unless_type('Str', $args);
-		my ($str) = map { $_->value } @$args;
-		print $str;
+		print $args->[0]->to_string;
 	}
 	sub symbol { 'display' }
 
