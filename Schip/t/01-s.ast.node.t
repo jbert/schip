@@ -34,7 +34,7 @@ is($lambda->value->length, 3, "lambda has 3 items");
 
 is($lambda->value->[2]->value->[2]->value, 'x', "can create down tree correctly");
 
-is($lambda->to_string,
+is($lambda->deparse,
 	"(lambda (x) (+ 2 x))",
 	"lambda deparses to correct representation");
 
@@ -51,5 +51,5 @@ foreach my $test_str (keys %test_cases) {
 	my $strNode = Schip::AST::Str->new(value => $test_str);
 	ok($strNode, "can create string node");
 	is($strNode->value, $test_str, "which stashes correct value");
-	is($strNode->to_string, $test_cases{$test_str}, "which stashes correct value");
+	is($strNode->deparse, $test_cases{$test_str}, "which stashes correct value");
 }

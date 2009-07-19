@@ -26,7 +26,7 @@ sub run_test_cases {
 
 		my @forms		= $parser->parse($code);
 		is (scalar @forms, 1, "only one form");	# Extend...
-		my $deparse		= $forms[0]->to_string;
+		my $deparse		= $forms[0]->deparse;
 		is($deparse, $expectedDeparse, "parsed code deparses to same string");
 		my $evaluator	= Schip::Evaluator->new;
 		my $result		= $evaluator->evaluate_forms(@forms);
@@ -48,7 +48,7 @@ sub run_test_cases {
 				}
 				elsif ($expected->isa('Schip::AST::Node')) {
 					ok($expected->equals($result), "values compare ok")
-						|| diag "got " . $result->to_string . " not " . $expected->to_string;
+						|| diag "got " . $result->deparse . " not " . $expected->deparse;
 				}
 				else {
 					die "Non-array ref [$expected] in expected value";

@@ -7,6 +7,12 @@
 	sub description { die "Abstract node doesn't have a description"; }
 
 	sub equals		{ die "Abstract node can't compare for equality"; }
+
+	# Most forms string representation is the same as their deparse
+	sub deparse	{
+		my $self = shift;
+		return $self->to_string;
+	}
 }
 
 {
@@ -65,6 +71,11 @@
 
 	sub to_string {
 		my $self = shift;
+		return $self->value;
+	}
+
+	sub deparse {
+		my $self = shift;
 		my $val = $self->value;
 		return '"' . $self->_escape_quotes . '"';
 	}
@@ -95,6 +106,11 @@
 		return "(" . $self->value->[0]->to_string . " . " . $self->value->[1]->to_string . ")";
 	}
 
+	sub deparse {
+		my $self = shift;
+		return "(" . $self->value->[0]->deparse . " . " . $self->value->[1]->deparse . ")";
+	}
+
 	sub description { 'pair'; }
 
 	sub equals {
@@ -113,6 +129,11 @@
 
 	# A list is just a pair whose cdr is also a list
 	extends qw(Schip::AST::Pair);
+
+	sub deparse {
+		my $self = shift;
+		return "(" . $self->value->map(sub {$_->deparse})->join(" ") . ")";
+	}
 
 	sub to_string {
 		my $self = shift;

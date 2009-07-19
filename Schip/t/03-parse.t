@@ -86,7 +86,7 @@ is($body->value->[1]->value, "2", "with correct value");
 isa_ok($body->value->[1], 'Schip::AST::Num', "2 -> symbol");
 is($body->value->[2]->value, "x", "with correct value");
 isa_ok($body->value->[2], 'Schip::AST::Sym', "x -> symbol");
-is($tree->to_string, $code, "deparse correctly");
+is($tree->deparse, $code, "deparse correctly");
 
 note "parse the empty list";
 $code = "()";
@@ -133,4 +133,4 @@ is($tree->value->[1]->value->length, 3, "second child has 3 elements");
 
 $code = "(a '(b c))";
 $tree = $parser->parse($code);
-is($tree->to_string, "(a (quote (b c)))", "deparse correctly");
+is($tree->deparse, "(a (quote (b c)))", "deparse correctly");
