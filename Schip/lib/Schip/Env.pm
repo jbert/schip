@@ -42,17 +42,4 @@ sub clone {
 	return $clone;
 }
 
-sub replace_binding {
-	my $self = shift;
-	my $symbol = shift;
-	my $newval = shift;
-	foreach my $frame (@{$self->_frames}) {
-		if (exists $frame->{$symbol}) {
-			$frame->{$symbol} = $newval;
-			return 1;
-		}
-	}
-	return undef;
-}
-
 1;
