@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use Test::More;
 
+my $num_tests = 2;
+
 my ($egdir)		= grep { -e "$_/example.dir" }				qw(. ../eg eg);
 unless ($egdir) {
 	plan skip_all => "Can't find example dir";
@@ -22,7 +24,7 @@ unless ($bintool) {
 	exit 0;
 }
 
-plan tests => 1;
+plan tests => $num_tests;
 
 foreach my $egfile (glob("$egdir/*.ss")) {
 	note "Running example file $egfile";
