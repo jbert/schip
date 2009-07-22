@@ -1,3 +1,5 @@
+- allow writing primitives (e.g. 'not') in scheme
+
 - write/grab some more examples
 	- project euler?
 	- compare output undef 'schip' and 'mzscheme -f'

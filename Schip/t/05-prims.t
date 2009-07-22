@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 173;
+use Test::More tests => 189;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -12,10 +12,22 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
+	test_not();
 	test_plus();
 	test_list();
 	test_cons_car_cdr();
 	test_equals();
+}
+
+sub test_not {
+	my @test_cases = (
+		'(not 1)'						=> 0,
+		'(not 0)'						=> 1,
+		'(not (= 1 1))'					=> 0,
+		'(not (= 1 0))'					=> 1,
+	);
+
+	run_test_cases("list", @test_cases);
 }
 
 sub test_equals {

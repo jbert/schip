@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 22;
+use Test::More tests => 31;
 
 BEGIN { use_ok('Schip::Env'); }
 
@@ -34,3 +34,15 @@ is($env->lookup('bar'), 'barval', "can still find bar");
 is($cloned_env->frame_depth, 2, "still only two frames in cloned env");
 is($cloned_env->lookup('foo'), 'fooval', "can find unshadowed foo in clone");
 is($cloned_env->lookup('bar'), 'barval', "can find bar in clone");
+
+
+ok(!$env->lookup('defined'), "'defined' not there at first");
+ok(!$cloned_env->lookup('defined'), "'defined' not in cloned env either");
+ok($env->add_define('defined', 'badger'), "can define a val");
+ok($env->lookup('defined'), "'defined' now there");
+ok($cloned_env->lookup('defined'), "'defined' now in cloned env");
+
+ok(!$env->lookup('defined2'), "'defined2' not there at first");
+ok($env->add_define('defined2', 'badger2'), "can define another val");
+ok($env->lookup('defined2'), "'defined2' now there");
+ok($env->lookup('defined'), "'defined' still there");

@@ -21,6 +21,7 @@ sub install {
 		qw(error display newline),
 		qw(add subtract equals multiply),
 		qw(cons car cdr list),
+		qw(not)
 		) {
 		my $subclass = "Schip::Evaluator::Primitive::" . ucfirst $op;
 		my $instance = $subclass->new;
@@ -249,6 +250,21 @@ VAL:
 		return $list->value->[0];
 	}
 	sub symbol { 'cdr' };
+
+
+	package Schip::Evaluator::Primitive::Not;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+		$self->die_unless_type('Num', $args);
+		Schip::AST::Num->new(value => $args->[0]->value ? 0 : 1);
+		return Schip::AST::Num->new(value => $args->[0]->value ? 0 : 1);
+	}
+	sub symbol { 'not' }
+
+
 }
 
 1;

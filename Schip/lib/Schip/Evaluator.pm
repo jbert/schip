@@ -70,7 +70,8 @@ sub _evaluate_list {
 		unless $carVal->isa('Schip::Evaluator::Invokable');
 
 	my @evaluated_args = map { $self->_evaluate_form($_) } @values;
-	return $carVal->invoke(\@evaluated_args);
+	my $result = $carVal->invoke(\@evaluated_args);
+	return $result;
 }
 
 my %special_forms = (
@@ -105,10 +106,10 @@ my %special_forms = (
 			$body		= $args->[1];
 		}
 		my $val = $eval->_evaluate_form($body);
-		$eval->env->push_frame($sym_str => $val);
+		$eval->env->add_define($sym_str => $val);
 		if ($val->isa('Schip::Evaluator::Lambda')) {
 			# circular ref?
-			$val->env->push_frame($sym_str => $val);
+			$val->env->add_define($sym_str => $val);
 		}
 		return $val;
 	},
