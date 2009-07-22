@@ -2,17 +2,18 @@
 	- project euler?
 	- compare output undef 'schip' and 'mzscheme -f'
 		- correctness (stdout) and start measuring performance :-)
-		- compare as autotest
+		DONE - compare as autotest
 
-- add comments to parser (and tests).
+- add ; comments to parser (and tests).
 
 - remove some commonality in the numeric ops with a base class
 	- implement in terms of 'fold'? 
 
-- fix recursion
-	- add (more) tests for recursion and (define (foo x) )
-	- add '-' (for fact)
-	- add display
+- add (more) tests for recursion and (define (foo x) )
+
+DONE - fix recursion
+	DONE - add '-' (for fact)
+	DONE - add display
 
 - add let (special form or rewrite to lambda?)
 	- consider deparse

@@ -5,7 +5,8 @@ use Test::More tests => 173;
 use Moose::Autobox;
 
 use Schip::Evaluator;
-require t::Testutil;
+use lib 't';
+require Testutil;
 
 run_main_tests();
 exit 0;

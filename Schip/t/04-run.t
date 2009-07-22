@@ -7,7 +7,8 @@ use Moose::Autobox;
 BEGIN { use_ok('Schip::Evaluator'); }
 use Schip::AST::Node;
 use Schip::Parser;
-require t::Testutil;
+use lib 't';
+require Testutil;
 
 test_atoms();
 test_two_plus_two();
