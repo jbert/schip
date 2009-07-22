@@ -134,3 +134,14 @@ is($tree->value->[1]->value->length, 3, "second child has 3 elements");
 $code = "(a '(b c))";
 $tree = $parser->parse($code);
 is($tree->deparse, "(a (quote (b c)))", "deparse correctly");
+
+$code = <<"EOC";
+;; This is some code
+(a b c)		; with comments
+EOC
+$tree = $parser->parse($code);
+is($tree->deparse, "(a b c)", "deparse has no comments");
+
+$code = '(display "semicolon here -> ; <- which isnt a comment")';
+$tree = $parser->parse($code);
+is($tree->deparse, $code, "deparse doesn't have comments");
