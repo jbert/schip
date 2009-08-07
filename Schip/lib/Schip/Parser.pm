@@ -1,7 +1,7 @@
 package Schip::Parser;
 use Moose;
 use Schip::AST::Node;
-use Text::ParseWords;
+use Schip::Lexer;
 use 5.10.0;
 use MooseX::NonMoose;
 
@@ -13,20 +13,47 @@ extends qw(Class::ErrorHandler);
 	has 'errstr'	=> (is => 'rw', isa => 'Str');
 }
 
+$::RD_HINT=1;
+my $SCHEME_GRAMMAR;
+
 sub parse {
 	my $self     = shift;
 	my $code_str = shift;
+
+	say 'code is: ' . $code_str;
+	my $parser = Parse::RecDescent->new($SCHEME_GRAMMAR);
+	my $token_trees = $parser->forms($code_str);
+	return unless $token_trees;
+	use Data::Dumper;
+	say 'tokens : ' . Dumper($token_trees);
+
 	my @forms;
 	eval {
-		use Data::Dumper;
-		my $tokens = $self->_tokenize_string($code_str);
-		push @forms, $self->_parse_one_form($tokens) while @$tokens;
+		push @forms, $self->_decorate_token_tree($_) for @$token_trees;
 	};
 	if ($@) {
 		die("Parse failed: $@") unless UNIVERSAL::isa($@, 'Schip::Parser::Error');
 		return $self->errstr($@->errstr);
 	}
 	return wantarray ? @forms : $forms[0];
+}
+
+sub _decorate_token_tree {
+	my ($self, $token_tree) = @_;
+	my ($type, $value) = @$token_tree;
+
+	my $ast_value;
+	given ($type) {
+		when ('list')	{
+			my @list = map { $self->_decorate_token_tree($_) } @$value;
+			$ast_value = \@list;
+		}
+		default			{
+			$ast_value = $value;
+		}
+	}
+	$type	= "Schip::AST::" . ucfirst $type;
+	return $type->new(value => $ast_value);
 }
 
 
@@ -36,151 +63,108 @@ sub _die {
 }
 
 sub _parse_one_form {
-	my $self        = shift;
-	my $tokens        = shift;
+	my $self	= shift;
+	my $form	= shift;
 
-	$self->_die("EMPTY_STREAM") unless scalar @$tokens;
-	return $self->_parse_list($tokens) 
-		if $tokens->[0] eq "(";
-	return $self->_parse_quoted($tokens) 
-		if $tokens->[0] eq "'";
-	return $self->_parse_atom(shift @$tokens);
-}
-
-sub _parse_quoted {
-	my $self         = shift;
-	my $tokens        = shift;
-
-	$self->_die("NO_QUOTE_START") unless $tokens->[0] eq "'";
-	shift @$tokens;
-	unshift @$tokens, "(", "quote";
-	push    @$tokens, ")";
-	return $self->_parse_list($tokens);
+	given (ref $form) {
+		when ('ARRAY')	{ return $self->_parse_list($form); }
+		when ('')		{ return $self->_parse_atom($form); }
+		default			{ $self->_die("Unrecognised tokens structure") }
+	}
 }
 
 sub _parse_list {
-	my $self         = shift;
-	my $tokens        = shift;
-
-	$self->_die("NO_LIST_START") unless $tokens->[0] eq '(';
-	shift @$tokens;
+	my $self    = shift;
+	my $form	= shift;
 
 	my @contents;
 LIST_ITEM:
-	while (scalar @$tokens) {
-		if ($tokens->[0] eq ')') {
-			shift @$tokens;
-			last LIST_ITEM;
-		}
-		push @contents, $self->_parse_one_form($tokens);
+	while (scalar @$form) {
+		my $subform = shift @$form;
+		push @contents, $self->_parse_one_form($subform);
 	}
 	return Schip::AST::List->new(value => \@contents);
 }
 
 sub _parse_atom {
-	my $self        = shift;
-	my $token        = shift;
+	my $self	= shift;
+	my $token   = shift;
 	my $type;
+	# TODO: leave decoration on in grammar and pick it off here, rather than running
+	# more regexps
 	given ($token) {
 		when (/^-?[\.\d]+$/)        { $type = 'Num' };
-		when (/^\"(.*)\"$/)                { $type = 'Str';
-		$token = $1   };
-		default                                        { $type = 'Sym' };
+		when (/^\"(.*)\"$/)         { $type = 'Str'; $token = $1   };
+		default                     { $type = 'Sym' };
 	}
 	$type = "Schip::AST::$type";
 	return $type->new(value => $token);
 }
 
-sub _tokenize_string {
-	my $self                = shift;
-	my $code_str        = shift;
 
-	my @raw_tokens = my_parse_line('\s+', 1, $code_str);
-	$self->_die("NO_TOKENS") unless @raw_tokens;
+$SCHEME_GRAMMAR = q{
 
-	my @tokens;
-RAW_TOKEN:
-	while (defined (my $raw_token = shift @raw_tokens)) {
-		next RAW_TOKEN unless defined $raw_token;
-		my ($start_parens, $token, $end_parens)
-			= $raw_token =~ /^
-			(['\(]*)
-			([^\)]*)
-			(\)*)
-			$/x;
-		next RAW_TOKEN unless defined $token;
-		$start_parens ||= '';
-		$end_parens   ||= '';
-		push @tokens, split(//, $start_parens);
-		push @tokens, $token if defined $token && $token ne '';
-		push @tokens, split(//, $end_parens);
-	}
-	$self->_die("NO_TOKENS") unless @tokens;
-#        say "tokens are: " . join(", ", @tokens);
-	return \@tokens;
-}
+quote:				'"'
+escaped_quote:		'\"'
+notquote:			/[^"]/
+quoted_elt:			escaped_quote | notquote
 
-# Ripped off from Text::ParseWords, but changed to be double-quotes only (since
-# we want single quote for, well, quoting.
-# TODO: write a proper parser.
-sub my_parse_line {
-    my($delimiter, $keep, $line) = @_;
-    my($word, @pieces);
+str:				quote quoted_elt(s) quote
+					{
+						$return = [$item[0], join('', @{$item[2]})];
+					}
 
-    no warnings 'uninitialized';	# we will be testing undef strings
+lparen:				'('
+rparen:				')'
 
-    while (length($line)) {
-        # This pattern is optimised to be stack conservative on older perls.
-        # Do not refactor without being careful and testing it on very long strings.
-        # See Perl bug #42980 for an example of a stack busting input.
-        $line =~ s/^
-                    (?: 
-                        # double quoted string
-                        (")                             # $quote
-                        ((?>[^\\"]*(?:\\.[^\\"]*)*))"   # $quoted 
-                    |   # --OR--
-                        # unquoted string
-						(                               # $unquoted 
-                            (?:\\.|[^\\"])*?
-                        )		
-                        # followed by
-						(                               # $delim
-                            \Z(?!\n)                    # EOL
-                        |   # --OR--
-                            (?-x:$delimiter)            # delimiter
-                        |   # --OR--                    
-                            (?!^)(?=")               # a quote
-                        )  
-				    )//xs or return;				# extended layout                  
+whitespace:			/\s+/
 
-        my ($quote, $quoted, $unquoted, $delim) = ($1,$2,$3,$4);
+symchar:			/[^'"\s\(\)]/
 
-		return() unless( defined($quote) || length($unquoted) || length($delim));
+digit:				/\d/
+sign:				/\+|-/
 
-        if ($keep) {
-		    $quoted = "$quote$quoted$quote";
-		}
-        else {
-		    $unquoted =~ s/\\(.)/$1/sg;
-		    if (defined $quote) {
-				$quoted =~ s/\\(.)/$1/sg if ($quote eq '"');
-            }
-		}
-        $word .= substr($line, 0, 0);	# leave results tainted
-        $word .= defined $quote ? $quoted : $unquoted;
- 
-        if (length($delim)) {
-            push(@pieces, $word);
-            push(@pieces, $delim) if ($keep eq 'delimiters');
-            undef $word;
-        }
-        if (!length($line)) {
-            push(@pieces, $word);
-		}
-    }
-    return(@pieces);
-}
+decimalpt:			'.'
+decimalexpansion:	decimalpt digit(s)
+					{
+						$return = $item[1] . join('', @{$item[2]});
+					}
 
+num:				sign(?) digit(s) decimalexpansion(?)
+					{
+						my $rule = shift @item;
+						my $numstr = '';
+						$numstr .= join('', @{$_}) for @item;
+						$return = [ $rule, $numstr ];
+					}
 
+sym:				symchar(s)
+					{
+						$return = [$item[0], join("", @{$item[1]})];
+					}
+
+atom:				str | num | sym
+					{
+						$return = $item[1];
+					}
+
+formspace:			form whitespace
+					{
+						$return = $item[1];
+					}
+
+list:				lparen formspace(s?) form(s?) rparen
+					{
+						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
+						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
+						$return = [ $item[0], [ @{$item{'formspace(s?)'}}, @{$item{'form(s?)'}} ] ];
+					}
+
+form:				(atom | list) whitespace(?)
+					{ $return = $item[1]; }
+
+forms:				form(s)
+};
 
 1;
+

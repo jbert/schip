@@ -1,3 +1,16 @@
+- drop parse/lex distinction
+	- problem in existing parser is symbol matching being too greedy/quoted string not being greedy enough
+	- have parser return tagged matches
+		- [type, value]
+		- then walk returned parse tree and construct ast
+		- tags should match AST node types
+		- so decorator code can walk returned parse tree, turning it into an ast tree
+	- have quoted_string return
+		- ['str', 'hello, "world"'] for "hello, \"world\""
+		- this avoids unescaping etc outside of the parser
+
+
+
 - allow writing primitives (e.g. 'not') in scheme
 
 - write/grab some more examples
