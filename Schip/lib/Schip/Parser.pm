@@ -122,8 +122,10 @@ lparen:				'('
 rparen:				')'
 
 whitespace:			/\s+/
+comment:			/;.*$/
+spacelike:			whitespace | comment
 
-symchar:			/[^'"\s\(\)]/
+symchar:			/[^;'"\s\(\)]/
 
 digit:				/\d/
 sign:				/\+|-/
@@ -152,7 +154,7 @@ atom:				str | num | sym
 						$return = $item[1];
 					}
 
-mformspace:			mform whitespace
+mformspace:			mform spacelike
 					{
 						$return = $item[1];
 					}
@@ -164,7 +166,7 @@ list:				lparen mformspace(s?) mform(s?) rparen
 						$return = [ $item[0], [ @{$item{'mformspace(s?)'}}, @{$item{'mform(s?)'}} ] ];
 					}
 
-form:				(atom | list) whitespace(?)
+form:				(atom | list) spacelike(?)
 					{ $return = $item[1]; }
 
 quote:				/'/
