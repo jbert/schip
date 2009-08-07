@@ -113,7 +113,7 @@ escaped_dquote:		'\"'
 notdquote:			/[^"]/
 dquoted_elt:		escaped_dquote | notdquote
 
-str:				dquote dquoted_elt(s) dquote
+str:				dquote dquoted_elt(s?) dquote
 					{
 						$return = [$item[0], join('', @{$item[2]})];
 					}
