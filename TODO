@@ -1,14 +1,3 @@
-DONE - drop parse/lex distinction
-	- problem in existing parser is symbol matching being too greedy/quoted string not being greedy enough
-	DONE - have parser return tagged matches
-		- [type, value]
-		- then walk returned parse tree and construct ast
-		- tags should match AST node types
-		- so decorator code can walk returned parse tree, turning it into an ast tree
-	DONE - have quoted_string return
-		- ['str', 'hello, "world"'] for "hello, \"world\""
-		- this avoids unescaping etc outside of the parser
-
 - mad Parse::RecDescent errors, but only when running under 'make test'
 
 
@@ -21,16 +10,10 @@ DONE - drop parse/lex distinction
 		- correctness (stdout) and start measuring performance :-)
 		DONE - compare as autotest
 
-DONE  - add ; comments to parser (and tests).
-
 - remove some commonality in the numeric ops with a base class
 	- implement in terms of 'fold'? 
 
 - add (more) tests for recursion and (define (foo x) )
-
-DONE - fix recursion
-	DONE - add '-' (for fact)
-	DONE - add display
 
 - add let (special form or rewrite to lambda?)
 	- consider deparse
@@ -47,40 +30,7 @@ DONE - fix recursion
 	newer code needs to know it can get back a list of trees (for full-parse of source file).
 	Fix: search for '$tree.*=.*->parse'
 
-DONE - extending primitives
-	- remove 'die_if_type' stuff and instead add type declarations to s.e.primitive
-		code => sub { ... }
-		args => 'All-Num', '2-Num'
-		?? can we use moose type checking for this ??
-	- add primitive name
-		- auto-register at new time
-
-DONE - schip.ast.node
-	- s.a.atom (type=atom, value=string)
-	- s.a.list (type=list, value=aref of ref-to-s.a.n)
-		(we use ref-to-s.a.n so (cdr l) only needs to shallow-copy)
-	- test: compose tree for (lambda (x) (+ 2 x))
-		- walk tree with accessors
-
-DONE - schip.environment
-	- ->lookup(symbol) (returns a schip.evaluator.value)
-	- ->push_frame(sym => val, sym => val, ...);
-	- ->pop_frame()
-	- test behavoiur needed for closures
-
-DONE - schip.run.value
-	- just isa schip.ast.node for now, since we're interpreting
-
-DONE - how to handle closures?
-	- lamdba contains ref to env?
-
-DONE - schip.parser
-	- takes a str, generates list of s.a.list (or go for implicit begin?)
-
 - schip.run
-	DONE ->make_initial_environment
-		+ empty plus primitives
-
 	->eval_ast_tree(tree, env)
 	- takes an s.a.list + s.env and returns an s.r.v and modifies s.env
 		- eval:
@@ -95,20 +45,10 @@ DONE - schip.parser
 		- decorate AST with line number (and col?)
 		- more uniform error reporting (typed exception?)
 
-	DONE - add REPL
-
 	- special forms
-		DONE - begin
-		DONE - define 
-			- introduces new lexical binding - is that what we want?
-		DONE - lambda
-		DONE - quote
-		DONE - if
 		- defmacro
 			- needs destructuring bind?
 		- let (primitive or special form? define in terms of lambda?)
-	- primitives
-		- cons/car/cdr (could do lambda implementation)
 
 	- add boolean type and type coercion
 		- #t and #f parse to s.ast.bool
