@@ -122,7 +122,7 @@ lparen:				'('
 rparen:				')'
 
 whitespace:			/\s+/
-comment:			/;.*$/
+comment:			/;.*\n/
 spacelike:			whitespace | comment
 
 symchar:			/[^;'"\s\(\)]/
@@ -154,19 +154,14 @@ atom:				str | num | sym
 						$return = $item[1];
 					}
 
-mformspace:			mform spacelike
-					{
-						$return = $item[1];
-					}
-
-list:				lparen mformspace(s?) mform(s?) rparen
+list:				lparen mform(s?) spacelike(?) rparen
 					{
 #						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
 #						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
-						$return = [ $item[0], [ @{$item{'mformspace(s?)'}}, @{$item{'mform(s?)'}} ] ];
+						$return = [ $item[0], [ @{$item{'mform(s?)'}} ] ];
 					}
 
-form:				(atom | list) spacelike(?)
+form:				(atom | list)
 					{ $return = $item[1]; }
 
 quote:				/'/
@@ -175,7 +170,7 @@ qform:				quote form
 						$return = [ $item[0], $item[2] ];
 					}
 
-mform:				(form | qform)
+mform:				spacelike(?) (form | qform)
 
 forms:				mform(s)
 };
