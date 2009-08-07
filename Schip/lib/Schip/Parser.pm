@@ -126,7 +126,11 @@ qform:				quote form
 						$return = [ $item[0], $item[2] ];
 					}
 
-mform:				spacelike(?) (form | qform)
+mform:				spacelike(?) (form | qform) spacelike(?)
+					{
+					use Data::Dumper;
+						$return = $item[2];
+					}
 
 forms:				mform(s)
 };
