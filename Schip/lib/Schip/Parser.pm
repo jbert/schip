@@ -152,16 +152,16 @@ atom:				str | num | sym
 						$return = $item[1];
 					}
 
-formspace:			form whitespace
+mformspace:			mform whitespace
 					{
 						$return = $item[1];
 					}
 
-list:				lparen formspace(s?) form(s?) rparen
+list:				lparen mformspace(s?) mform(s?) rparen
 					{
 #						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
 #						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
-						$return = [ $item[0], [ @{$item{'formspace(s?)'}}, @{$item{'form(s?)'}} ] ];
+						$return = [ $item[0], [ @{$item{'mformspace(s?)'}}, @{$item{'mform(s?)'}} ] ];
 					}
 
 form:				(atom | list) whitespace(?)
@@ -170,14 +170,12 @@ form:				(atom | list) whitespace(?)
 quote:				/'/
 qform:				quote form
 					{
-						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
-						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
 						$return = [ $item[0], $item[2] ];
 					}
 
-form_or_qform:		(form | qform)
+mform:				(form | qform)
 
-forms:				form_or_qform(s)
+forms:				mform(s)
 };
 
 1;
