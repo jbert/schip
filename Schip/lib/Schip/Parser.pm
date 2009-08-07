@@ -48,6 +48,10 @@ sub _decorate_token_tree {
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
 			$ast_value = \@list;
 		}
+		when ('qform') {
+			$type = 'list';
+			$ast_value = [Schip::AST::Sym->new(value => 'quote'), $self->_decorate_token_tree($value)];
+		}
 		default			{
 			$ast_value = $value;
 		}
@@ -104,12 +108,12 @@ sub _parse_atom {
 
 $SCHEME_GRAMMAR = q{
 
-quote:				'"'
-escaped_quote:		'\"'
-notquote:			/[^"]/
-quoted_elt:			escaped_quote | notquote
+dquote:				'"'
+escaped_dquote:		'\"'
+notdquote:			/[^"]/
+dquoted_elt:		escaped_dquote | notdquote
 
-str:				quote quoted_elt(s) quote
+str:				dquote dquoted_elt(s) dquote
 					{
 						$return = [$item[0], join('', @{$item[2]})];
 					}
@@ -155,15 +159,25 @@ formspace:			form whitespace
 
 list:				lparen formspace(s?) form(s?) rparen
 					{
-						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
-						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
+#						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
+#						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
 						$return = [ $item[0], [ @{$item{'formspace(s?)'}}, @{$item{'form(s?)'}} ] ];
 					}
 
 form:				(atom | list) whitespace(?)
 					{ $return = $item[1]; }
 
-forms:				form(s)
+quote:				/'/
+qform:				quote form
+					{
+						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
+						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
+						$return = [ $item[0], $item[2] ];
+					}
+
+form_or_qform:		(form | qform)
+
+forms:				form_or_qform(s)
 };
 
 1;
