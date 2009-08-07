@@ -1,13 +1,15 @@
-- drop parse/lex distinction
+DONE - drop parse/lex distinction
 	- problem in existing parser is symbol matching being too greedy/quoted string not being greedy enough
-	- have parser return tagged matches
+	DONE - have parser return tagged matches
 		- [type, value]
 		- then walk returned parse tree and construct ast
 		- tags should match AST node types
 		- so decorator code can walk returned parse tree, turning it into an ast tree
-	- have quoted_string return
+	DONE - have quoted_string return
 		- ['str', 'hello, "world"'] for "hello, \"world\""
 		- this avoids unescaping etc outside of the parser
+
+- mad Parse::RecDescent errors, but only when running under 'make test'
 
 
 
@@ -19,7 +21,7 @@
 		- correctness (stdout) and start measuring performance :-)
 		DONE - compare as autotest
 
-- add ; comments to parser (and tests).
+DONE  - add ; comments to parser (and tests).
 
 - remove some commonality in the numeric ops with a base class
 	- implement in terms of 'fold'? 

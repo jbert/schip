@@ -1,7 +1,6 @@
 package Schip::Parser;
 use Moose;
 use Schip::AST::Node;
-use Schip::Lexer;
 use 5.10.0;
 use MooseX::NonMoose;
 
