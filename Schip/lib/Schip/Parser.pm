@@ -20,12 +20,12 @@ sub parse {
 	my $self     = shift;
 	my $code_str = shift;
 
-	say 'code is: ' . $code_str;
+#	say 'code is: ' . $code_str;
 	my $parser = Parse::RecDescent->new($SCHEME_GRAMMAR);
 	my $token_trees = $parser->forms($code_str);
 	return unless $token_trees;
-	use Data::Dumper;
-	say 'tokens : ' . Dumper($token_trees);
+#	use Data::Dumper;
+#	say 'tokens : ' . Dumper($token_trees);
 
 	my @forms;
 	eval {
@@ -58,51 +58,6 @@ sub _decorate_token_tree {
 	}
 	$type	= "Schip::AST::" . ucfirst $type;
 	return $type->new(value => $ast_value);
-}
-
-
-sub _die {
-	my $self = shift;
-	die Schip::Parser::Error->new(errstr => join(",", @_));
-}
-
-sub _parse_one_form {
-	my $self	= shift;
-	my $form	= shift;
-
-	given (ref $form) {
-		when ('ARRAY')	{ return $self->_parse_list($form); }
-		when ('')		{ return $self->_parse_atom($form); }
-		default			{ $self->_die("Unrecognised tokens structure") }
-	}
-}
-
-sub _parse_list {
-	my $self    = shift;
-	my $form	= shift;
-
-	my @contents;
-LIST_ITEM:
-	while (scalar @$form) {
-		my $subform = shift @$form;
-		push @contents, $self->_parse_one_form($subform);
-	}
-	return Schip::AST::List->new(value => \@contents);
-}
-
-sub _parse_atom {
-	my $self	= shift;
-	my $token   = shift;
-	my $type;
-	# TODO: leave decoration on in grammar and pick it off here, rather than running
-	# more regexps
-	given ($token) {
-		when (/^-?[\.\d]+$/)        { $type = 'Num' };
-		when (/^\"(.*)\"$/)         { $type = 'Str'; $token = $1   };
-		default                     { $type = 'Sym' };
-	}
-	$type = "Schip::AST::$type";
-	return $type->new(value => $token);
 }
 
 
