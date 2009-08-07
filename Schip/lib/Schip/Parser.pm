@@ -2,6 +2,7 @@ package Schip::Parser;
 use Moose;
 use Schip::AST::Node;
 use 5.10.0;
+use Parse::RecDescent;
 use MooseX::NonMoose;
 
 extends qw(Class::ErrorHandler);
@@ -13,6 +14,7 @@ extends qw(Class::ErrorHandler);
 }
 
 $::RD_HINT=1;
+$Parse::RecDescent::skip = '';
 my $SCHEME_GRAMMAR;
 
 sub parse {
