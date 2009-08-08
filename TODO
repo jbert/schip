@@ -1,8 +1,28 @@
+For 0.2:
+========
+
 - mad Parse::RecDescent errors, but only when running under 'make test'
 
-
+- add macros
 
 - allow writing primitives (e.g. 'not') in scheme
+
+- implement 'when' as a macro transforming to 'if'
+
+- implement 'let' as a macro transforming to 'lambda'
+	- consider deparse (maybe we need to give up on deparse?)
+	- or provide properties on forms, so defmacro can stash original code
+	- and quote can add a marker for deparse
+
+
+==================================================
+
+
+- allow doc strings
+
+- get error text out of parse.recdescent + report
+	- decorate AST with line number (and col?)?
+	- throw exception
 
 - write/grab some more examples
 	- project euler?
@@ -15,11 +35,6 @@
 
 - add (more) tests for recursion and (define (foo x) )
 
-- add let (special form or rewrite to lambda?)
-	- consider deparse
-
-- add macros
-
 - design perl/scheme interop
 	- could make use of sigils to call out to perl vars
 		- or do we want more equivalence?
@@ -30,33 +45,13 @@
 	newer code needs to know it can get back a list of trees (for full-parse of source file).
 	Fix: search for '$tree.*=.*->parse'
 
-- schip.run
-	->eval_ast_tree(tree, env)
-	- takes an s.a.list + s.env and returns an s.r.v and modifies s.env
-		- eval:
-			- s.a.atom	=> s.r.value representing atom
-			- s.a.list	=> switch(car list) (perl 5.10!)
-								-> special form
-								-> lookup form to get value
-									if isa primitive prim->invoke
-									error unless val isa s.a.list+car=lambda
-									eval-lambda with (cdr form) args
-	- debugging errors
-		- decorate AST with line number (and col?)
-		- more uniform error reporting (typed exception?)
+- add boolean type and type coercion
+	- #t and #f parse to s.ast.bool
+	- is a bool a number? (No, you don't want addition etc)
+	- coerce arg to 'if' to boolean
+	- (or just add is_true method to s.ast?)
 
-	- special forms
-		- defmacro
-			- needs destructuring bind?
-		- let (primitive or special form? define in terms of lambda?)
-
-	- add boolean type and type coercion
-		- #t and #f parse to s.ast.bool
-		- is a bool a number? (No, you don't want addition etc)
-		- coerce arg to 'if' to boolean
-		- (or just add is_true method to s.ast?)
-
-
+- add more numeric tower (complex and exact)?
 
 - can we get as far as compiling lambdas to perl code?
 	- they could install into the environment in the same way that the
