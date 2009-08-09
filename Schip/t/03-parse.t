@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 81;
+use Test::More tests => 103;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -145,3 +145,39 @@ is($tree->deparse, "(a b c)", "deparse has no comments");
 $code = '(display "semicolon here -> ; <- which isnt a comment")';
 $tree = $parser->parse($code);
 is($tree->deparse, $code, "deparse doesn't have comments");
+
+$code = '`(a b c)';
+$tree = $parser->parse($code);
+ok($tree, "can parse quasiquoted list");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 2, " has 2 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'quasiquote', "first child is a sym called quasiquote");
+
+isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
+is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+
+
+$code = "`(a ,b ,@(cdr '(1 2 3)))";
+$tree = $parser->parse($code);
+ok($tree, "can parse complex qq list");
+isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+is($tree->value->length, 2, " has 2 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'quasiquote', "first child is a sym called quasiquote");
+
+isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
+is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+
+isa_ok($tree->value->[1]->value->[1], 'Schip::AST::List', "can find list where we're expecting comma");
+is($tree->value->[1]->value->[1]->value->length, 2, "comma list has 2 elts");
+isa_ok($tree->value->[1]->value->[1]->value->[0], 'Schip::AST::Sym', "2 elt list begins with symbol");
+is($tree->value->[1]->value->[1]->value->[0]->value, 'unquote', ", becomes 'unquote' symbol");
+
+isa_ok($tree->value->[1]->value->[2], 'Schip::AST::List', "can find list where we're expecting comma-at");
+is($tree->value->[1]->value->[2]->value->length, 2, "comma-at list has 2 elts");
+isa_ok($tree->value->[1]->value->[2]->value->[0], 'Schip::AST::Sym', "2 elt list begins with symbol");
+is($tree->value->[1]->value->[2]->value->[0]->value, 'unquote-splicing', ", becomes 'unquote-splicing' symbol");
+

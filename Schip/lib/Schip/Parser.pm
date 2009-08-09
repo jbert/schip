@@ -49,9 +49,22 @@ sub _decorate_token_tree {
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
 			$ast_value = \@list;
 		}
+		# TODO - make these data driven to reduce repeated code?
 		when ('qform') {
 			$type = 'list';
 			$ast_value = [Schip::AST::Sym->new(value => 'quote'), $self->_decorate_token_tree($value)];
+		}
+		when ('qqform') {
+			$type = 'list';
+			$ast_value = [Schip::AST::Sym->new(value => 'quasiquote'), $self->_decorate_token_tree($value)];
+		}
+		when ('uqform') {
+			$type = 'list';
+			$ast_value = [Schip::AST::Sym->new(value => 'unquote'), $self->_decorate_token_tree($value)];
+		}
+		when ('uqsform') {
+			$type = 'list';
+			$ast_value = [Schip::AST::Sym->new(value => 'unquote-splicing'), $self->_decorate_token_tree($value)];
 		}
 		default			{
 			$ast_value = $value;
@@ -81,7 +94,7 @@ whitespace:			/\s+/
 comment:			/;.*\n/
 spacelike:			whitespace | comment
 
-symchar:			/[^;'"\s\(\)]/
+symchar:			/[^,@`;'"\s\(\)]/
 
 digit:				/\d/
 sign:				/\+|-/
@@ -125,8 +138,24 @@ qform:				quote form
 					{
 						$return = [ $item[0], $item[2] ];
 					}
+quasiquote:			'`'
+qqform:				quasiquote form
+					{
+						$return = [ $item[0], $item[2] ];
+					}
+unquote:			','
+uqform:				unquote form
+					{
+						$return = [ $item[0], $item[2] ];
+					}
+unquote_splice:		',@'
+uqsform:			unquote_splice form
+					{
+						$return = [ $item[0], $item[2] ];
+					}
 
-mform:				spacelike(?) (form | qform) spacelike(?)
+
+mform:				spacelike(?) (form | uqsform | uqform | qqform | qform) spacelike(?)
 					{
 					use Data::Dumper;
 						$return = $item[2];

@@ -1,9 +1,21 @@
 For 0.2:
 ========
 
-- mad Parse::RecDescent errors, but only when running under 'make test'
-
 - add macros
+	- add quasiquote to parser
+	- add a pre-evaluation loop
+		- skim top-levels, looking for defmacro
+			- when found, install macro definition
+		- loop top levels again, expanding macros in ast
+			- loop until max N or no changes?
+	- testing:
+		- 'when' (if equivalent) (basic)
+		- can implement 'delay' (evaluation order)
+		- macro-in-macro
+		- out-of-order macro-in-macro
+		- inf recursive macro-in-macro should error?
+
+- mad Parse::RecDescent errors, but only when running under 'make test'
 
 - allow writing primitives (e.g. 'not') in scheme
 
