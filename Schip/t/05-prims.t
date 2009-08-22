@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 189;
+use Test::More tests => 130;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -27,7 +27,7 @@ sub test_not {
 		'(not (= 1 0))'					=> 1,
 	);
 
-	run_test_cases("list", @test_cases);
+	run_test_cases("not", @test_cases);
 }
 
 sub test_equals {

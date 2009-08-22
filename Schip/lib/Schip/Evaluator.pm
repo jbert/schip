@@ -12,6 +12,10 @@ has 'env'		=> (is => 'rw',
 					isa => 'Schip::Env',
 					default => sub { return __PACKAGE__->make_initial_environment(); } );
 
+# The current level of quasiquoting. ` incremenets , and ,@ decrement.
+# Package var so we can localise it
+our $QUASIQUOTE_LEVEL = 0;
+
 sub evaluate_forms {
 	my ($self, @forms) = @_;
 
@@ -39,9 +43,14 @@ sub _evaluate_form {
 	my $value;
 	die_error("UNDEFINED_FORM") unless $form;
 	if ($form->isa('Schip::AST::Sym')) {
-		$value = $self->env->lookup($form->value);
-		die_error("UNDEFINED_SYMBOL: " . $form->value)
-			unless defined $value;
+		if ($QUASIQUOTE_LEVEL == 0) {
+			$value = $self->env->lookup($form->value);
+			die_error("UNDEFINED_SYMBOL: " . $form->value)
+				unless defined $value;
+		}
+		else {
+			$value = $form;
+		}
 	}
 	elsif ($form->isa('Schip::AST::Atom')) {
 		$value = $form;
@@ -59,19 +68,30 @@ sub _evaluate_list {
 	my $self		= shift;
 	my $list_form	= shift;
 
-	my @values	= @{$list_form->value};
-	my $car		= shift @values;
+	my @values			= @{$list_form->value};
 
-	my $form_handler = $self->_lookup_special_form($car);
-	return $form_handler->($self, \@values) if $form_handler;
+	my $invoker;
+	my $car	= shift @values;
+	if ($QUASIQUOTE_LEVEL == 0 || ($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
+		my $form_handler = $self->_lookup_special_form($car);
+		return $form_handler->($self, \@values) if $form_handler;
 
-	my $carVal	= $self->_evaluate_form($car);
-	die_error("Symbol in car position is not invokable: " . $car->value)
-		unless $carVal->isa('Schip::Evaluator::Invokable');
-
+		$invoker = $self->_evaluate_form($car);
+		die_error("Symbol in car position is not invokable: " . $car->value)
+			unless $invoker->isa('Schip::Evaluator::Invokable');
+	}
+	else {
+		unshift @values, $car if defined $car;
+	}
 	my @evaluated_args = map { $self->_evaluate_form($_) } @values;
-	my $result = $carVal->invoke(\@evaluated_args);
-	return $result;
+
+	if ($invoker) {
+		my $result = $invoker->invoke(\@evaluated_args);
+		return $result;
+	}
+	else {
+		return Schip::AST::List->new(value => \@evaluated_args);
+	}
 }
 
 my %special_forms = (
@@ -132,6 +152,23 @@ my %special_forms = (
 
 		die_error("Not exactly one arg to quote") unless scalar @$args == 1;
 		return $args->[0];
+	},
+	quasiquote	=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		die_error("Not exactly one arg to quasiquote") unless scalar @$args == 1;
+		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL + 1;
+		return $eval->_evaluate_form($args->[0]);
+	},
+	unquote	=> sub {
+		my $eval = shift;
+		my $args = shift;
+
+		die_error("Not exactly one arg to unquote") unless scalar @$args == 1;
+		die_error("Unquote found outside quasiquote") unless $QUASIQUOTE_LEVEL > 0;
+		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL - 1;
+		return $eval->_evaluate_form($args->[0]);
 	},
 	if			=> sub {
 		my $eval = shift;

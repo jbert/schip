@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 173;
+use Test::More tests => 97;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }

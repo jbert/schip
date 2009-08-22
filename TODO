@@ -2,7 +2,8 @@ For 0.2:
 ========
 
 - add macros
-	- add quasiquote to parser
+	DONE - add quasiquote to parser
+	DONE - add quasiquote to evaluator
 	- add a pre-evaluation loop
 		- skim top-levels, looking for defmacro
 			- when found, install macro definition
@@ -15,7 +16,8 @@ For 0.2:
 		- out-of-order macro-in-macro
 		- inf recursive macro-in-macro should error?
 
-- mad Parse::RecDescent errors, but only when running under 'make test'
+DONE - mad Parse::RecDescent errors, but only when running under 'make test'
+	- fixed by latest version of P::RD
 
 - allow writing primitives (e.g. 'not') in scheme
 
