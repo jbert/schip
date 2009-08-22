@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 103;
+use Test::More tests => 110;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -181,3 +181,15 @@ is($tree->value->[1]->value->[2]->value->length, 2, "comma-at list has 2 elts");
 isa_ok($tree->value->[1]->value->[2]->value->[0], 'Schip::AST::Sym', "2 elt list begins with symbol");
 is($tree->value->[1]->value->[2]->value->[0]->value, 'unquote-splicing', ", becomes 'unquote-splicing' symbol");
 
+
+
+$code = "(a . b)";
+$tree = $parser->parse($code);
+ok($tree, "can parse dotted pair");
+isa_ok($tree, 'Schip::AST::Pair', "tree is-a pair");
+is($tree->value->length, 2, " has 2 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'a', "first child is a sym called a");
+isa_ok($tree->value->[1], 'Schip::AST::Sym', "second child is a sym");
+is($tree->value->[1]->value, 'b', "second child is a sym called b");
