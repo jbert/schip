@@ -4,6 +4,9 @@ For 0.2:
 - add macros
 	DONE - add quasiquote to parser
 	DONE - add quasiquote to evaluator
+	- add dotted pair to parser
+	- add scheme-like dotted-pair to funargs
+		- and factor out so can use for defmacro
 	- add a pre-evaluation loop
 		- skim top-levels, looking for defmacro
 			- when found, install macro definition

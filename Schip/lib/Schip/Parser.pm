@@ -49,6 +49,10 @@ sub _decorate_token_tree {
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
 			$ast_value = \@list;
 		}
+		when ('pair')	{
+			my @pair = map { $self->_decorate_token_tree($_) } @$value;
+			$ast_value = \@pair;
+		}
 		# TODO - make these data driven to reduce repeated code?
 		when ('qform') {
 			$type = 'list';
@@ -130,7 +134,14 @@ list:				lparen mform(s?) spacelike(?) rparen
 						$return = [ $item[0], [ @{$item{'mform(s?)'}} ] ];
 					}
 
-form:				(atom | list)
+pair:				lparen mform '.' mform rparen
+					{
+#						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
+#						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
+						$return = [ $item[0], [ $item[2], $item[4] ] ];
+					}
+
+form:				(atom | pair | list)
 					{ $return = $item[1]; }
 
 quote:				/'/
