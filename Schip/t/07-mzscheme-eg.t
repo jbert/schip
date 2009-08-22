@@ -3,13 +3,13 @@ use strict;
 use warnings;
 use Test::More;
 
-my $num_tests = 2;
-
 my ($egdir)		= grep { -e "$_/example.dir" }				qw(. ../eg eg);
 unless ($egdir) {
 	plan skip_all => "Can't find example dir";
 	exit 0;
 }
+my @egfiles = glob("$egdir/*.ss");
+my $num_tests = scalar @egfiles;
 
 my $mzscheme	= `which mzscheme`;
 unless ($mzscheme) {
@@ -26,7 +26,7 @@ unless ($bintool) {
 
 plan tests => $num_tests;
 
-foreach my $egfile (glob("$egdir/*.ss")) {
+foreach my $egfile (@egfiles) {
 	note "Running example file $egfile";
 	my $mzscheme_output = join('', `mzscheme -f $egfile`);
 	my $bintool_output	= join('', `$bintool $egfile`);
