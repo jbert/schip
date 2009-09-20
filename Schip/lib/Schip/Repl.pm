@@ -23,6 +23,7 @@ REPL:
 		my $prompt = "schip $command_count> ";
 		print $outfh $prompt if $self->interactive;
 		my $line = <$infh>;
+warn "line is $line\n";
 		last REPL unless defined $line;
 		chomp $line;
 		next REPL if $line eq '';

@@ -12,6 +12,8 @@ sub invoke {
 	my $args = shift;
 
 	my @params = @{$self->params->value};
+#use Data::Dumper qw(Dumper);
+#print Dumper(\@params) . "\n";
 	my @args   = @{$args};
 	die "Got " . (scalar @args) . " args but expected " . scalar (@params)
 		unless scalar(@args) == scalar (@params);

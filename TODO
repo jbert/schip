@@ -1,10 +1,13 @@
 For 0.2:
 ========
 
+- fix dotted pairs + lists :-(
+	- e.g. need to be able to parse (1 . (2 3)) correctly. and (1 2 . 3)
+
 - add macros
 	DONE - add quasiquote to parser
 	DONE - add quasiquote to evaluator
-	- add dotted pair to parser
+	DONE - add dotted pair to parser
 	- add scheme-like dotted-pair to funargs
 		- and factor out so can use for defmacro
 	- add a pre-evaluation loop

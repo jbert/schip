@@ -16,6 +16,8 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
+	test_pairs();
+	exit 0;
 	test_begin();
 	test_error();
 	test_define();
@@ -23,6 +25,22 @@ sub run_main_tests {
 	test_closure();
 	test_quote();
 	test_if();
+}
+
+sub test_pairs {
+	my @test_cases = (
+#		"(quote (1 . 2))"	=> {1 => 2},
+#		"(quote (1 . 2))"	=> Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 1),
+#															   Schip::AST::Num->new(value => 2)]),
+#		"(quote (1  2 . 3))"	=> Schip::AST::Pair->new(value => [
+#									   		Schip::AST::Num->new(value => 1),
+#											Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 2),
+#																	   Schip::AST::Num->new(value => 3)]),
+#									]),
+		"(quote (1 . (2 3)))"	=> {deparse => '(1 2 3)', value => [1, 2, 3]},
+	);
+
+	run_test_cases("test pairs", @test_cases);
 }
 
 sub test_quote {

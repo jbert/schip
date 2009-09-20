@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 110;
+use Test::More tests => 120;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -193,3 +193,25 @@ isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
 is($tree->value->[0]->value, 'a', "first child is a sym called a");
 isa_ok($tree->value->[1], 'Schip::AST::Sym', "second child is a sym");
 is($tree->value->[1]->value, 'b', "second child is a sym called b");
+
+
+
+
+$code = "(a b . c)";
+$tree = $parser->parse($code);
+ok($tree, "can parse dotted list");
+isa_ok($tree, 'Schip::AST::Pair', "tree is-a pair");
+is($tree->value->length, 2, " has 2 children");
+
+isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
+is($tree->value->[0]->value, 'a', "first child is a sym called a");
+
+isa_ok($tree->value->[1], 'Schip::AST::Pair', "second child is a pair");
+isa_ok($tree->value->[1]->value->[0], 'Schip::AST::Sym', "with sym at car");
+is($tree->value->[1]->value->[0]->value, 'b', "called b");
+isa_ok($tree->value->[1]->value->[1], 'Schip::AST::Sym', "and a sym at cdr");
+is($tree->value->[1]->value->[1]->value, 'c', "called c");
+
+exit 0;
+
+

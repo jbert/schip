@@ -12,6 +12,11 @@ sub invoke {
 	return $self->code($args);
 }
 
+sub sym_ok {
+	my $self = shift;
+	return Schip::AST::Sym->new(value => "'ok");
+}
+
 sub install {
 	my $class = shift;
 	my $env   = shift;
@@ -154,6 +159,7 @@ VAL:
 		my ($self, $args) = @_;
 		$self->die_numargs($args, 1);
 		print $args->[0]->to_string;
+		return $self->sym_ok;
 	}
 	sub symbol { 'display' }
 
@@ -166,6 +172,7 @@ VAL:
 		my ($self, $args) = @_;
 		$self->die_numargs($args, 0);
 		print "\n";
+		return $self->sym_ok;
 	}
 	sub symbol { 'newline' }
 

@@ -18,8 +18,10 @@ sub run_test_cases {
 		$expectedDeparse	=~ s/\s+/ /g;
 
 		if (ref $expected && ref $expected eq 'HASH') {
-			$expectedDeparse = $expected->{deparse} if $expected->{deparse};
-			$expected		 = $expected->{value};
+			if (exists $expected->{value}) {
+				$expectedDeparse = $expected->{deparse} if $expected->{deparse};
+				$expected		 = $expected->{value};
+			}
 		}
 
 		note("Checking $code");
@@ -62,6 +64,13 @@ sub compare_ast_tree {
 				compare_ast_tree($got_elt, $expected_elt, $str . ".$index");
 				++$index;
 			}
+		}
+		elsif (ref $expected eq 'HASH') {
+			die "hash found with > 2 elts" unless scalar keys %$expected == 1;
+			isa_ok($got, 'Schip::AST::Pair', "got a pair value");
+			is($got->value->length, 2, "pair has length 2 (phew)");
+			compare_ast_tree($got->value->[0], keys %$expected, "LH of pair matches");
+			compare_ast_tree($got->value->[1], values %$expected, "RH of pair matches");
 		}
 		elsif ($expected->isa('Schip::AST::Node')) {
 			ok($expected->equals($got), "values compare ok")

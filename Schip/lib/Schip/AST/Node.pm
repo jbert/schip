@@ -11,8 +11,10 @@
 	# Most forms string representation is the same as their deparse
 	sub deparse	{
 		my $self = shift;
-		return $self->to_string;
+		return $self->to_string(1);
 	}
+
+	sub is_null { return 0; }
 }
 
 {
@@ -40,7 +42,7 @@
 	has 'value'	=> (is => 'rw', isa => 'Num');
 
 	sub to_string {
-		my $self = shift;
+		my ($self, $deparse) = @_;
 		return $self->value;
 	}
 
@@ -55,7 +57,7 @@
 	has 'value'	=> (is => 'rw', isa => 'Str');
 
 	sub to_string {
-		my $self = shift;
+		my ($self, $deparse) = @_;
 		return $self->value;
 	}
 
@@ -70,14 +72,13 @@
 	has 'value'	=> (is => 'rw', isa => 'Str');
 
 	sub to_string {
-		my $self = shift;
-		return $self->value;
-	}
-
-	sub deparse {
-		my $self = shift;
-		my $val = $self->value;
-		return '"' . $self->_escape_quotes . '"';
+		my ($self, $deparse) = @_;
+		if ($deparse) {
+			return '"' . $self->_escape_quotes . '"';
+		}
+		else {
+			return $self->value;
+		}
 	}
 
 	sub _escape_quotes {
@@ -101,14 +102,50 @@
 					isa			=> 'ArrayRef[Schip::AST::Node]',
 					default		=> sub {[]}, );
 
+=pod
+
+...we want to check at Pair->new time whether cdr isa list and if so, make a list instead
+	...that runs head into the "can we share structure between one list and another, which we can't
+	...so we could copy
+...if we do this then we need to make sure 'cons' comes via here (which is must anyway, really)
+
+
+....!OK! strategy:
+	- we move to using ::Pair everywhere
+		- hard work, since we expose $list->value in various places
+	- possible optimisation:
+		- except when we know we're creating a list. e.g. '(1 2 3), (list a b c) etc.
+		- taking 'cdr' on a list "breaks" it, so we then:
+			- create the equivalent cons list (whose values are the same values as where in the list,
+				so any refs to those values are still good) as a list of ::Pairs
+			- make the ::List just proxy to the cons pairs
+				- which works if we avoid the ->value encapsulation breaking
+			- provide rich interface to s.ast.list for functions which only touch values (caNdr)
+				(nth, map, etc) to allow fast access to list without 'breaking' it
+
+=cut
+
 	sub to_string {
-		my $self = shift;
-		return "(" . $self->value->[0]->to_string . " . " . $self->value->[1]->to_string . ")";
+		my ($self, $deparse, $parent_hid_dot) = @_;
+		my ($car, $cdr) = ($self->car, $self->cdr);
+		my $ret = '';
+		my $hide_dot = $self->cdr->isa('Schip::AST::Pair');
+		$ret .= '(' unless $parent_hid_dot;
+		$ret .= $car->to_string($deparse, $hide_dot) . ' ';
+		$ret .= '. ' unless $hide_dot;
+		$ret .= $cdr->to_string($deparse, $hide_dot);
+		$ret .= ')' unless $parent_hid_dot;
+		return $ret;
 	}
 
-	sub deparse {
+	sub car {
 		my $self = shift;
-		return "(" . $self->value->[0]->deparse . " . " . $self->value->[1]->deparse . ")";
+		return $self->value->[0];
+	}
+
+	sub cdr {
+		my $self = shift;
+		return $self->value->[1];
 	}
 
 	sub description { 'pair'; }
@@ -130,14 +167,9 @@
 	# A list is just a pair whose cdr is also a list
 	extends qw(Schip::AST::Pair);
 
-	sub deparse {
-		my $self = shift;
-		return "(" . $self->value->map(sub {$_->deparse})->join(" ") . ")";
-	}
-
 	sub to_string {
-		my $self = shift;
-		return "(" . $self->value->map(sub {$_->to_string})->join(" ") . ")";
+		my ($self, $deparse) = @_;
+		return "(" . $self->value->map(sub {$_->to_string($deparse)})->join(" ") . ")";
 	}
 
 	sub description { 'list'; }
@@ -152,6 +184,11 @@
 			return 0 unless $self->value->[$i] == $rhs->value->[$i];
 		}
 		return 1;
+	}
+
+	sub is_null {
+		my $self = shift;
+		return $self->value->length == 0;
 	}
 }
 

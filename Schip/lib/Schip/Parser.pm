@@ -70,6 +70,19 @@ sub _decorate_token_tree {
 			$type = 'list';
 			$ast_value = [Schip::AST::Sym->new(value => 'unquote-splicing'), $self->_decorate_token_tree($value)];
 		}
+		when ('dotted_list') {
+			$type = 'list';
+			my @items = @{$value->[0]};
+			push @items, $value->[1];
+			@items = map { $self->_decorate_token_tree($_) } @items;
+			my $cdr = pop @items;
+			my $car = pop @items;
+			my $return = Schip::AST::Pair->new(value => [$car, $cdr]);
+			while (@items) {
+				$return = Schip::AST::Pair->new(value => [pop @items, $return]);
+			}
+			return $return;
+		}
 		default			{
 			$ast_value = $value;
 		}
@@ -98,7 +111,7 @@ whitespace:			/\s+/
 comment:			/;.*\n/
 spacelike:			whitespace | comment
 
-symchar:			/[^,@`;'"\s\(\)]/
+symchar:			/[^.,@`;'"\s\(\)]/
 
 digit:				/\d/
 sign:				/\+|-/
@@ -127,6 +140,13 @@ atom:				str | num | sym
 						$return = $item[1];
 					}
 
+dotted_list:		lparen mform(s?) '.' mform rparen
+					{
+#						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
+#						print "list: " . Data::Dumper::Dumper(\@item) . "\n";
+						$return = [ 'dotted_list', [ $item[2], $item[4] ] ];
+					}
+
 list:				lparen mform(s?) spacelike(?) rparen
 					{
 #						print "hash: " . Data::Dumper::Dumper(\%item) . "\n";
@@ -141,7 +161,7 @@ pair:				lparen mform '.' mform rparen
 						$return = [ $item[0], [ $item[2], $item[4] ] ];
 					}
 
-form:				(atom | pair | list)
+form:				atom | pair | dotted_list | list
 					{ $return = $item[1]; }
 
 quote:				/'/
@@ -168,7 +188,6 @@ uqsform:			unquote_splice form
 
 mform:				spacelike(?) (form | uqsform | uqform | qqform | qform) spacelike(?)
 					{
-					use Data::Dumper;
 						$return = $item[2];
 					}
 
