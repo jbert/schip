@@ -1,8 +1,9 @@
+use strict;
+use warnings;
 {
 	package Schip::AST::Node;
-	use Moose;
-
-	has 'type'	=> (is => 'rw', isa => 'Str');
+	use base qw(Class::Accessor::Fast);
+	__PACKAGE__->mk_accessors qw(type);
 
 	sub description { die "Abstract node doesn't have a description"; }
 
@@ -13,63 +14,57 @@
 		my $self = shift;
 		return $self->to_string(1);
 	}
-
-	sub is_null { return 0; }
 }
 
 {
 	package Schip::AST::Atom;
-	use Moose;
+	use base qw(Schip::AST::Node);
+	__PACKAGE__->mk_accessors qw(value);
 
-	extends qw(Schip::AST::Node);
+	use overload
+		'""' => "to_string";
+
+	sub new {
+		my ($class, $value) = @_;
+		return bless \$value, $class;
+	}
 
 	sub description { 'atomic'; }
 
-	sub equals { 
+	sub value {
 		my $self = shift;
-		my $rhs  = shift;
-		return ref $self eq ref $rhs && $self->value eq $rhs->value;
+		return $$self;
 	}
-}
-
-{
-	package Schip::AST::Num;
-#	use Math::BigRat;
-	use Moose;
-
-	extends qw(Schip::AST::Atom);
-#	has 'value'	=> (is => 'rw', isa => 'Num|Math::BigRat');
-	has 'value'	=> (is => 'rw', isa => 'Num');
 
 	sub to_string {
 		my ($self, $deparse) = @_;
 		return $self->value;
 	}
+
+	sub equals { 
+		my $self = shift;
+		my $rhs  = shift;
+		return ref $self eq ref $rhs && $self eq $rhs;
+	}
+}
+
+{
+	package Schip::AST::Num;
+	use base qw(Schip::AST::Atom);
 
 	sub description { 'numeric'; }
 }
 
 {
 	package Schip::AST::Sym;
-	use Moose;
-
-	extends qw(Schip::AST::Atom);
-	has 'value'	=> (is => 'rw', isa => 'Str');
-
-	sub to_string {
-		my ($self, $deparse) = @_;
-		return $self->value;
-	}
+	use base qw(Schip::AST::Atom);
 
 	sub description { 'symbolic'; }
 }
 
 {
 	package Schip::AST::Str;
-	use Moose;
-
-	extends qw(Schip::AST::Atom);
-	has 'value'	=> (is => 'rw', isa => 'Str');
+	use base qw(Schip::AST::Atom);
 
 	sub to_string {
 		my ($self, $deparse) = @_;
@@ -94,20 +89,15 @@
 
 {
 	package Schip::AST::Pair;
-	use Moose;
-	use Moose::Autobox;
+	use base qw(Schip::AST::Node);
+	__PACKAGE__->mk_accessors qw(car cdr);
 
-	extends qw(Schip::AST::Node);
-	has 'value'	=> (is			=> 'rw',
-					isa			=> 'ArrayRef[Schip::AST::Node]',
-					default		=> sub {[]}, );
+	sub new {
+		my ($class, $car, $cdr) = @_;
+		return $class->SUPER::new({car => $car, cdr => $cdr});
+	}
 
 =pod
-
-...we want to check at Pair->new time whether cdr isa list and if so, make a list instead
-	...that runs head into the "can we share structure between one list and another, which we can't
-	...so we could copy
-...if we do this then we need to make sure 'cons' comes via here (which is must anyway, really)
 
 
 ....!OK! strategy:
@@ -138,38 +128,48 @@
 		return $ret;
 	}
 
-	sub car {
-		my $self = shift;
-		return $self->value->[0];
-	}
-
-	sub cdr {
-		my $self = shift;
-		return $self->value->[1];
-	}
-
 	sub description { 'pair'; }
 
 	sub equals {
 		my $self = shift;
 		my $rhs  = shift;
 		return ref $self eq ref $rhs
-			&& $self->value->[0]->equals($rhs->value->[0])
-			&& $self->value->[1]->equals($rhs->value->[1]);
+			&& $self->car->equals($rhs->car)
+			&& $self->cdr->equals($rhs->cdr);
+	}
+}
+
+{
+	package Schip::AST::NilPair;
+	use base qw(Schip::AST::Node);
+
+	my $singleton = bless [], __PACKAGE__;
+	sub new { return $singleton; }
+
+	sub to_string { return "()"; }
+
+	sub description { 'pair'; }
+
+	sub equals {
+		my $self = shift;
+		my $rhs  = shift;
+		return ref $self eq ref $rhs;
 	}
 }
 
 {
 	package Schip::AST::List;
-	use Moose;
-	use Moose::Autobox;
+	use base qw(Schip::AST::Node);
+	__PACKAGE__->mk_accessors qw(elts);
 
-	# A list is just a pair whose cdr is also a list
-	extends qw(Schip::AST::Pair);
+	sub new {
+		my ($class, @elts) = @_;
+		return $class->SUPER::new({elts => \@elts});
+	}
 
 	sub to_string {
 		my ($self, $deparse) = @_;
-		return "(" . $self->value->map(sub {$_->to_string($deparse)})->join(" ") . ")";
+		return "(" . join(" ", map { $_->to_string($deparse); } @{$self->elts}) . ")";
 	}
 
 	sub description { 'list'; }
@@ -179,16 +179,49 @@
 		my $rhs  = shift;
 
 		return 0 unless ref $self eq ref $rhs;
-		return 0 unless $self->value->length == $rhs->value->length;
-		for my $i (0..($self->value->length - 1)) {
-			return 0 unless $self->value->[$i] == $rhs->value->[$i];
+		return 0 unless $self->elts->length == $rhs->elts->length;
+		for my $i (0..($self->elts->length - 1)) {
+			return 0 unless $self->elts->[$i] == $rhs->elts->[$i];
 		}
 		return 1;
 	}
 
-	sub is_null {
+	sub car {
 		my $self = shift;
-		return $self->value->length == 0;
+		return $self->elts->[0];
+	}
+
+	# TODO - this does need to construct the cons'd list, but it should
+	# stash it internally so that future refs to this list (or future calls to cdr)
+	# refer to the same items.
+	sub cdr {
+		my $self = shift;
+		my $cons_list = $self->_as_cons_list;
+		return $cons_list->cdr;
+	}
+
+	sub _as_cons_list {
+		my $self = shift;
+		my $cons_list = Schip::AST::NilPair->new;
+		foreach my $elt (reverse @{$self->elts}) {
+			$cons_list = Schip::AST::Pair->new($elt, $cons_list);
+		}
+		return $cons_list;
+	}
+
+	sub push {
+		my ($self, @elts) = @_;
+		push @{$self->elts}, @elts;
+	}
+
+	sub length {
+		my ($self, @elts) = @_;
+		return scalar @{$self->elts};
+	}
+
+	sub nth {
+		my ($self, $index) = @_;
+		return $self->elts->[$index];
 	}
 }
 

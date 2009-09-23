@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use Test::More tests => 22;
-use Moose::Autobox;
 
 BEGIN { use_ok('Schip::AST::Node'); }
 
@@ -19,20 +18,20 @@ is($args->length, 1, "now args has 1 item");
 my $body = Schip::AST::List->new;
 ok($body, "can create empty s.a.list for body");
 $body->push(
-	Schip::AST::Sym->new(value => '+'),
-	Schip::AST::Num->new(value => 2),
-	Schip::AST::Sym->new(value => 'x'),
+	Schip::AST::Sym->new('+'),
+	Schip::AST::Num->new(2),
+	Schip::AST::Sym->new('x'),
 );
 is($body->length, 3, "body now has 3 items");
 
 my $lambda = Schip::AST::List->new;
 ok($lambda, "can create empty s.a.list for lambda");
-$lambda->push(Schip::AST::Sym->new(value => 'lambda'));
+$lambda->push(Schip::AST::Sym->new('lambda'));
 $lambda->push($args);
 $lambda->push($body);
 is($lambda->length, 3, "lambda has 3 items");
 
-is($lambda->[2]->[2], 'x', "can create down tree correctly");
+is($lambda->nth(2)->nth(2), 'x', "can create down tree correctly");
 
 is($lambda->deparse,
 	"(lambda (x) (+ 2 x))",
