@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 22;
+use Test::More tests => 33;
 
 BEGIN { use_ok('Schip::AST::Node'); }
 
@@ -51,3 +51,22 @@ foreach my $test_str (keys %test_cases) {
 	is($strNode->value, $test_str, "which stashes correct value");
 	is($strNode->deparse, $test_cases{$test_str}, "which stashes correct value");
 }
+
+my $num_nums = 10;
+my $nums = Schip::AST::List->new(map { Schip::AST::Num->new($_) } (1..$num_nums));
+ok($nums, "can create list of nums");
+is($nums->length, $num_nums, "list has length $num_nums");
+is($nums->nth(0), 1, "list starts with 1");
+is($nums->nth(1), 2, "cadr list is 2");
+
+my $from_2 = $nums->cdr;
+is($from_2->length, $num_nums-1, "cdr has length " . ($num_nums-1));
+is($from_2->nth(0), 2, "cdr starts with 2");
+
+$from_2->car(5);
+is($from_2->length, $num_nums-1, "cdr has length " . ($num_nums-1));
+is($from_2->nth(0), 5, "cdr starts with 2");
+
+is($nums->nth(0), 1, "car list is 1");
+is($nums->nth(1), 2, "cadr list is 2");
+is($nums->length, $num_nums, "list still has length $num_nums");

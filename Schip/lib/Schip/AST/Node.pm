@@ -97,6 +97,16 @@ use warnings;
 		return $class->SUPER::new({car => $car, cdr => $cdr});
 	}
 
+	sub length {
+		my $self = shift;
+		return 1 + $self->cdr->length;
+	}
+	sub nth {
+		my ($self, $index) = @_;
+		return $self->car if $index == 0;
+		return $self->cdr->nth($index-1);
+	}
+
 =pod
 
 
@@ -155,6 +165,9 @@ use warnings;
 		my $rhs  = shift;
 		return ref $self eq ref $rhs;
 	}
+
+	sub length		{ 0; }
+	sub nth			{ undef; }
 }
 
 {

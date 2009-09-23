@@ -4,7 +4,7 @@ For 0.2:
 - fix dotted pairs + lists :-(
 	- e.g. need to be able to parse (1 . (2 3)) correctly. and (1 2 . 3)
 
-- change s.ast.node.new to drop value
+DONE - change s.ast.node.new to drop value
 
 - have s.ast.list->[n] call ->nth(n)?
 	- or make it is-a list with sugar?
