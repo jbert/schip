@@ -101,10 +101,16 @@ use warnings;
 		my $self = shift;
 		return 1 + $self->cdr->length;
 	}
+
 	sub nth {
-		my ($self, $index) = @_;
-		return $self->car if $index == 0;
-		return $self->cdr->nth($index-1);
+		my $self = shift;
+		my $index = shift;
+
+		if ($index == 0) {
+			$self->car(@_) if @_;
+			return $self->car;
+		}
+		return $self->cdr->nth($index-1, @_);
 	}
 
 =pod
@@ -147,6 +153,12 @@ use warnings;
 			&& $self->car->equals($rhs->car)
 			&& $self->cdr->equals($rhs->cdr);
 	}
+
+	sub foreach {
+		my ($self, $func) = @_;
+		$func->($self->car);
+		return $self->cdr->foreach;
+	}
 }
 
 {
@@ -168,35 +180,108 @@ use warnings;
 
 	sub length		{ 0; }
 	sub nth			{ undef; }
+	sub foreach		{ undef; }
 }
 
 {
 	package Schip::AST::List;
 	use base qw(Schip::AST::Node);
-	__PACKAGE__->mk_accessors qw(elts);
+	# Two forms of representation, perl list of _elts or ref to a scheme cons list
+	# we only ever have one form or the other
+	__PACKAGE__->mk_accessors qw(_elts _clist);
 
 	sub new {
 		my ($class, @elts) = @_;
-		return $class->SUPER::new({elts => \@elts});
-	}
-
-	sub to_string {
-		my ($self, $deparse) = @_;
-		return "(" . join(" ", map { $_->to_string($deparse); } @{$self->elts}) . ")";
+		return $class->SUPER::new({_elts => \@elts});
 	}
 
 	sub description { 'list'; }
 
-	sub equals {
+	sub cdr {
 		my $self = shift;
-		my $rhs  = shift;
+		$self->_break_to_clist if $self->_elts;
+		return $self->_clist->cdr;
+	}
 
-		return 0 unless ref $self eq ref $rhs;
-		return 0 unless $self->elts->length == $rhs->elts->length;
-		for my $i (0..($self->elts->length - 1)) {
-			return 0 unless $self->elts->[$i] == $rhs->elts->[$i];
+	sub _break_to_clist {
+		my $self = shift;
+		die "Internal error: already a clist" if $self->_clist;
+		my $clist = __PACKAGE__->_prepend_list_to_clist($self->_elts, Schip::AST::NilPair->new);
+		$self->_clist($clist);
+		$self->_elts(undef);
+		return 1;
+	}
+
+	sub _prepend_list_to_clist {
+		my ($class, $elts, $clist) = (@_);
+		foreach my $elt (reverse @$elts) {
+			$clist = Schip::AST::Pair->new($elt, $clist);
+		}
+		return $clist;
+	}
+
+	# ============================================================
+	# Dual implementation elts/clist
+
+	sub unshift {
+		my ($self, @elts) = @_;
+		if ($self->_elts) {
+			unshift @{$self->_elts}, @elts;
+		}
+		else {
+			my $clist = __PACKAGE__->_prepend_list_to_clist($self->_elts, $self->_clist);
+			$self->_clist($clist);
 		}
 		return 1;
+	}
+
+	sub nth {
+		my $self	= shift;
+		my $index	= shift;
+		my $val;
+		if ($self->_elts) {
+			if (@_) {
+				$self->_elts->[$index] = shift;
+			}
+			$val = $self->_elts->[$index];
+		}
+		else {
+			return $self->_clist->nth($index, @_);
+		}
+	}
+
+	sub length {
+		my ($self, @elts) = @_;
+		if ($self->_elts) {
+			return scalar @{$self->_elts};
+		}
+		else {
+			return $self->_clist->length;
+		}
+	}
+
+	sub foreach {
+		my ($self, $func) = @_;
+		if ($self->_elts) {
+			$func->($_) for @{$self->_elts};
+		}
+		else {
+			return $self->_clist->foreach($func);
+		}
+	}
+
+	# ============================================================
+	# Single implementation
+
+	sub to_string {
+		my ($self, $deparse) = @_;
+		my $str;
+		$self->foreach(sub {
+			my $elt = shift;
+			$str .= (defined $str ? ' ' : '(');
+			$str .= $elt->to_string($deparse);
+		});
+		$str .= ')';
 	}
 
 	sub car			{ my $self = shift; return $self->nth(0, @_); }
@@ -210,42 +295,6 @@ use warnings;
 	sub cddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr; }
 	sub cdddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr->cdr; }
 
-	# TODO - this does need to construct the cons'd list, but it should
-	# stash it internally so that future refs to this list (or future calls to cdr)
-	# refer to the same items.
-	sub cdr {
-		my $self = shift;
-		my $cons_list = $self->_as_cons_list;
-		return $cons_list->cdr;
-	}
-
-	sub _as_cons_list {
-		my $self = shift;
-		my $cons_list = Schip::AST::NilPair->new;
-		foreach my $elt (reverse @{$self->elts}) {
-			$cons_list = Schip::AST::Pair->new($elt, $cons_list);
-		}
-		return $cons_list;
-	}
-
-	sub push {
-		my ($self, @elts) = @_;
-		push @{$self->elts}, @elts;
-	}
-
-	sub length {
-		my ($self, @elts) = @_;
-		return scalar @{$self->elts};
-	}
-
-	sub nth {
-		my $self	= shift;
-		my $index	= shift;
-		if (@_) {
-			$self->elts->[$index] = shift;
-		}
-		return $self->elts->[$index];
-	}
 }
 
 1;

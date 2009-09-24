@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 33;
+use Test::More tests => 36;
 
 BEGIN { use_ok('Schip::AST::Node'); }
 
@@ -12,12 +12,12 @@ note("building the ast tree for (lambda (x) (+ 2 x))");
 
 my $args = Schip::AST::List->new;
 ok($args, "can create empty s.a.list for args");
-$args->push(Schip::AST::Sym->new('x'));
+$args->unshift(Schip::AST::Sym->new('x'));
 is($args->length, 1, "now args has 1 item");
 
 my $body = Schip::AST::List->new;
 ok($body, "can create empty s.a.list for body");
-$body->push(
+$body->unshift(
 	Schip::AST::Sym->new('+'),
 	Schip::AST::Num->new(2),
 	Schip::AST::Sym->new('x'),
@@ -26,9 +26,9 @@ is($body->length, 3, "body now has 3 items");
 
 my $lambda = Schip::AST::List->new;
 ok($lambda, "can create empty s.a.list for lambda");
-$lambda->push(Schip::AST::Sym->new('lambda'));
-$lambda->push($args);
-$lambda->push($body);
+$lambda->unshift($body);
+$lambda->unshift($args);
+$lambda->unshift(Schip::AST::Sym->new('lambda'));
 is($lambda->length, 3, "lambda has 3 items");
 
 is($lambda->nth(2)->nth(2), 'x', "can create down tree correctly");
