@@ -199,10 +199,16 @@ use warnings;
 		return 1;
 	}
 
-	sub car {
-		my $self = shift;
-		return $self->elts->[0];
-	}
+	sub car			{ my $self = shift; return $self->nth(0, @_); }
+	sub cadr		{ my $self = shift; return $self->nth(1, @_); }
+	sub caddr		{ my $self = shift; return $self->nth(2, @_); }
+	sub cadddr		{ my $self = shift; return $self->nth(3, @_); }
+	sub caddddr		{ my $self = shift; return $self->nth(4, @_); }
+
+	sub cddr		{ my $self = shift; return $self->cdr->cdr; }
+	sub cdddr		{ my $self = shift; return $self->cdr->cdr->cdr; }
+	sub cddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr; }
+	sub cdddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr->cdr; }
 
 	# TODO - this does need to construct the cons'd list, but it should
 	# stash it internally so that future refs to this list (or future calls to cdr)
@@ -233,7 +239,11 @@ use warnings;
 	}
 
 	sub nth {
-		my ($self, $index) = @_;
+		my $self	= shift;
+		my $index	= shift;
+		if (@_) {
+			$self->elts->[$index] = shift;
+		}
 		return $self->elts->[$index];
 	}
 }

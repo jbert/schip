@@ -57,16 +57,21 @@ my $nums = Schip::AST::List->new(map { Schip::AST::Num->new($_) } (1..$num_nums)
 ok($nums, "can create list of nums");
 is($nums->length, $num_nums, "list has length $num_nums");
 is($nums->nth(0), 1, "list starts with 1");
+is($nums->car, 1, "list starts with 1");
 is($nums->nth(1), 2, "cadr list is 2");
+is($nums->cadr, 2, "cadr list is 2");
 
-my $from_2 = $nums->cdr;
-is($from_2->length, $num_nums-1, "cdr has length " . ($num_nums-1));
-is($from_2->nth(0), 2, "cdr starts with 2");
+my $from_3 = $nums->cddr;
+is($from_3->length, $num_nums-2, "cdr has length " . ($num_nums-2));
+is($from_3->car, 3, "cdr starts with 3");
 
-$from_2->car(5);
-is($from_2->length, $num_nums-1, "cdr has length " . ($num_nums-1));
-is($from_2->nth(0), 5, "cdr starts with 2");
+# Mututate!
+$from_3->car(5);
 
-is($nums->nth(0), 1, "car list is 1");
-is($nums->nth(1), 2, "cadr list is 2");
+is($from_3->length, $num_nums-2, "cdr has length " . ($num_nums-2));
+is($from_3->car, 5, "cdr now starts with 5");
+
+is($nums->car, 1, "car list is 1");
+is($nums->cadr, 2, "cadr list is 2");
+is($nums->caddr, 5, "caddr list is 5");
 is($nums->length, $num_nums, "list still has length $num_nums");
