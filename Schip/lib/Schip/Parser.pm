@@ -47,28 +47,32 @@ sub _decorate_token_tree {
 	given ($type) {
 		when ('list')	{
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
-			$ast_value = \@list;
+			return Schip::AST::List->new(@list);
 		}
 		when ('pair')	{
 			my @pair = map { $self->_decorate_token_tree($_) } @$value;
-			$ast_value = \@pair;
+			return Schip::AST::Pair->new(@pair);
 		}
 		# TODO - make these data driven to reduce repeated code?
 		when ('qform') {
 			$type = 'list';
-			$ast_value = [Schip::AST::Sym->new(value => 'quote'), $self->_decorate_token_tree($value)];
+			return Schip::AST::List->new(Schip::AST::Sym->new('quote'),
+				$self->_decorate_token_tree($value));
 		}
 		when ('qqform') {
 			$type = 'list';
-			$ast_value = [Schip::AST::Sym->new(value => 'quasiquote'), $self->_decorate_token_tree($value)];
+			return Schip::AST::List->new(Schip::AST::Sym->new('quasiquote'),
+				$self->_decorate_token_tree($value));
 		}
 		when ('uqform') {
 			$type = 'list';
-			$ast_value = [Schip::AST::Sym->new(value => 'unquote'), $self->_decorate_token_tree($value)];
+			return Schip::AST::List->new(Schip::AST::Sym->new('unquote'),
+				$self->_decorate_token_tree($value));
 		}
 		when ('uqsform') {
 			$type = 'list';
-			$ast_value = [Schip::AST::Sym->new(value => 'unquote-splicing'), $self->_decorate_token_tree($value)];
+			return Schip::AST::List->new(Schip::AST::Sym->new('unquote-splicing'),
+				$self->_decorate_token_tree($value));
 		}
 		when ('dotted_list') {
 			$type = 'list';
@@ -77,9 +81,10 @@ sub _decorate_token_tree {
 			@items = map { $self->_decorate_token_tree($_) } @items;
 			my $cdr = pop @items;
 			my $car = pop @items;
-			my $return = Schip::AST::Pair->new(value => [$car, $cdr]);
+			warn "TODO: use pair ctor from list";
+			my $return = Schip::AST::Pair->new($car, $cdr);
 			while (@items) {
-				$return = Schip::AST::Pair->new(value => [pop @items, $return]);
+				$return = Schip::AST::Pair->new(pop @items, $return);
 			}
 			return $return;
 		}
@@ -88,7 +93,7 @@ sub _decorate_token_tree {
 		}
 	}
 	$type	= "Schip::AST::" . ucfirst $type;
-	return $type->new(value => $ast_value);
+	return $type->new($ast_value);
 }
 
 
