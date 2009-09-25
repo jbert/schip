@@ -90,21 +90,36 @@ use warnings;
 {
 	package Schip::AST::Pair;
 	use base qw(Schip::AST::Node);
-	__PACKAGE__->mk_accessors qw(car cdr);
+	__PACKAGE__->mk_accessors qw(car is_clist);
 
 	sub new {
 		my ($class, $car, $cdr) = @_;
-		return $class->SUPER::new({car => $car, cdr => $cdr});
+		my $self = $class->SUPER::new({car => $car});
+		$self->cdr($cdr);	# Sets is_clist too
+		return $self;
 	}
 
 	sub length {
 		my $self = shift;
+		return unless $self->is_clist;
 		return 1 + $self->cdr->length;
+	}
+
+	sub cdr {
+		my $self = shift;
+		if (@_) {
+			my $val = shift;
+			my $is_clist = $val->isa('Schip::AST::Pair') && $val->is_clist;
+			$self->is_clist($is_clist);
+			$self->{cdr} = $val;
+		}
+		return $self->{cdr}
 	}
 
 	sub nth {
 		my $self = shift;
 		my $index = shift;
+		return unless $self->is_clist;
 
 		if ($index == 0) {
 			$self->car(@_) if @_;
@@ -112,24 +127,6 @@ use warnings;
 		}
 		return $self->cdr->nth($index-1, @_);
 	}
-
-=pod
-
-
-....!OK! strategy:
-	- we move to using ::Pair everywhere
-		- hard work, since we expose $list->value in various places
-	- possible optimisation:
-		- except when we know we're creating a list. e.g. '(1 2 3), (list a b c) etc.
-		- taking 'cdr' on a list "breaks" it, so we then:
-			- create the equivalent cons list (whose values are the same values as where in the list,
-				so any refs to those values are still good) as a list of ::Pairs
-			- make the ::List just proxy to the cons pairs
-				- which works if we avoid the ->value encapsulation breaking
-			- provide rich interface to s.ast.list for functions which only touch values (caNdr)
-				(nth, map, etc) to allow fast access to list without 'breaking' it
-
-=cut
 
 	sub to_string {
 		my ($self, $deparse, $parent_hid_dot) = @_;
@@ -156,6 +153,7 @@ use warnings;
 
 	sub foreach {
 		my ($self, $func) = @_;
+		return unless $self->is_clist;
 		$func->($self->car);
 		return $self->cdr->foreach;
 	}
@@ -163,7 +161,7 @@ use warnings;
 
 {
 	package Schip::AST::NilPair;
-	use base qw(Schip::AST::Node);
+	use base qw(Schip::AST::Pair);
 
 	my $singleton = bless [], __PACKAGE__;
 	sub new { return $singleton; }
@@ -181,6 +179,7 @@ use warnings;
 	sub length		{ 0; }
 	sub nth			{ undef; }
 	sub foreach		{ undef; }
+	sub is_clist	{ 1; }
 }
 
 {
