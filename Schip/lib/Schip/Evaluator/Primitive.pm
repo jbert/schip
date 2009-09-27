@@ -197,13 +197,7 @@ VAL:
 		$self->die_error("cons called with != 2 args") if @$args != 2;
 		my $car = $args->[0];
 		my $cdr = $args->[1];
-		# Consing with a list in cdr gives you a list
-		if ($cdr->isa('Schip::AST::List')) {
-			return Schip::AST::List->new($car, @{$cdr->value});
-		}
-		else {
-			return Schip::AST::Pair->new($car, $cdr);
-		}
+		return Schip::AST::Pair->new($car, $cdr);
 	}
 	sub symbol { 'cons' }
 
@@ -215,12 +209,10 @@ VAL:
 	sub code {
 		my ($self, $args) = @_;
 		$self->die_error("car called with != 1 args") if @$args != 1;
-		$self->die_error("car called on non-pair: " . ref $args->[0])
-		unless $args->[0]->isa('Schip::AST::Pair');
-		my $list = $args->[0];
-		# Controversial?
-		die "car of empty list" if $list->value->length == 0;
-		return $list->value->[0];
+		my $arg = $args->[0];
+		$self->die_error("car called on non-pair/non-list: " . ref $arg)
+			unless $arg->isa('Schip::AST::Pair') || $arg->isa('Schip::AST::List');
+		return $arg->car;
 	}
 	sub symbol { 'car' }
 
@@ -231,30 +223,11 @@ VAL:
 
 	sub code {
 		my ($self, $args) = @_;
-		$self->die_error("cdr called with != 1 args")	if @$args != 1;
-		$self->die_error("car called on non-pair: " . ref $args->[0])
-			unless $args->[0]->isa('Schip::AST::Pair');
-		my $list = $args->[0];
-		die "cdr of empty list" if $list->value->length == 0;
-		if ($list->value->length == 1) {
-			# Should we have a global, static object for the null list?
-			return Schip::AST::List->new(value => []);
-		}
-		else {
-			# Symettric to conditional in cons.
-			if ($list->isa('Schip::AST::List')) {
-				my @newlist = @{$list->value};
-				shift @newlist;
-				return Schip::AST::List->new(value => \@newlist);
-			}
-			elsif ($list->isa('Schip::AST::Pair')) {
-				return $list->value->[1];
-			}
-			else {
-				die_error("Unknown type in cdr: " . ref($list->value));
-			}
-		}
-		return $list->value->[0];
+		$self->die_error("cdr called with != 1 args") if @$args != 1;
+		my $arg = $args->[0];
+		$self->die_error("cdr called on non-pair/non-list: " . ref $arg)
+			unless $arg->isa('Schip::AST::Pair') || $arg->isa('Schip::AST::List');
+		return $arg->cdr;
 	}
 	sub symbol { 'cdr' };
 
@@ -266,8 +239,7 @@ VAL:
 	sub code {
 		my ($self, $args) = @_;
 		$self->die_unless_type('Num', $args);
-		Schip::AST::Num->new(value => $args->[0]->value ? 0 : 1);
-		return Schip::AST::Num->new(value => $args->[0]->value ? 0 : 1);
+		return Schip::AST::Num->new($args->[0] ? 0 : 1);
 	}
 	sub symbol { 'not' }
 
