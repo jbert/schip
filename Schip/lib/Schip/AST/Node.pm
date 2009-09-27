@@ -135,7 +135,7 @@ use Carp;
 		my ($self, $deparse, $parent_hid_dot) = @_;
 		my ($car, $cdr) = ($self->car, $self->cdr);
 		my $ret = '';
-		my $hide_dot = $self->cdr->isa('Schip::AST::Pair');
+		my $hide_dot = $self->cdr->isa('Schip::AST::Pair') || $self->cdr->isa('Schip::AST::List');
 		$ret .= '(' unless $parent_hid_dot;
 		$ret .= $car->to_string($deparse, $hide_dot) . ' ';
 		$ret .= '. ' unless $hide_dot;
@@ -310,15 +310,17 @@ use Carp;
 	}
 
 	sub to_string {
-		my ($self, $deparse) = @_;
-		my $str = '(';
+		my ($self, $deparse, $parent_hid_dot) = @_;
+		my $str = '';
+		$str .= '(' unless $parent_hid_dot;
 		$self->foreach(sub {
 			my $elt = shift;
 			$str .= $elt->to_string($deparse);
 			$str .= ' ';
 		});
 		$str =~ s/ $//;
-		$str .= ')';
+		$str .= ')' unless $parent_hid_dot;
+		return $str;
 	}
 
 	sub car			{ my $self = shift; return $self->nth(0, @_); }
