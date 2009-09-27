@@ -1,5 +1,7 @@
 use strict;
 use warnings;
+use 5.10.0;
+use Carp;
 {
 	package Schip::AST::Node;
 	use base qw(Class::Accessor::Fast);
@@ -26,6 +28,7 @@ use warnings;
 
 	sub new {
 		my ($class, $value) = @_;
+		Carp::croak "Too many args to new $class" unless @_ == 2;
 		return bless \$value, $class;
 	}
 
@@ -157,6 +160,18 @@ use warnings;
 		$func->($self->car);
 		return $self->cdr->foreach;
 	}
+
+	sub map {
+		my ($self, $func, $skip) = @_;
+		$skip //= 0;
+		return unless $self->is_clist;
+		if ($skip > 0) {
+			return $self->cdr->map($func, $skip - 1);
+		}
+		else {
+			return ($func->($self->car), $self->cdr->map($func));
+		}
+	}
 }
 
 {
@@ -179,6 +194,7 @@ use warnings;
 	sub length		{ 0; }
 	sub nth			{ undef; }
 	sub foreach		{ undef; }
+	sub map			{ (); }
 	sub is_clist	{ 1; }
 }
 
@@ -238,6 +254,7 @@ use warnings;
 		my $self	= shift;
 		my $index	= shift;
 		my $val;
+		Carp::cluck "What to return?" if $index > ($self->length-1);
 		if ($self->_elts) {
 			if (@_) {
 				$self->_elts->[$index] = shift;
@@ -269,17 +286,38 @@ use warnings;
 		}
 	}
 
+	sub map {
+		my ($self, $func, $skip) = @_;
+		$skip //= 0;
+		if ($self->_elts) {
+			my @elts = @{$self->_elts};
+			return () unless @elts;
+			return map { $func->($_); } @elts[$skip..$#elts];
+		}
+		else {
+			return $self->_clist->map($func, $skip);
+		}
+	}
+
 	# ============================================================
 	# Single implementation
 
+	sub copy {
+		my ($self, $skip) = shift;
+		my $idfunc = sub { $_[0]; };
+		my @elts = $self->_clist->map($idfunc, $skip);
+		return Schip::AST::List->new(@elts);
+	}
+
 	sub to_string {
 		my ($self, $deparse) = @_;
-		my $str;
+		my $str = '(';
 		$self->foreach(sub {
 			my $elt = shift;
-			$str .= (defined $str ? ' ' : '(');
 			$str .= $elt->to_string($deparse);
+			$str .= ' ';
 		});
+		$str =~ s/ $//;
 		$str .= ')';
 	}
 

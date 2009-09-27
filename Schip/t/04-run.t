@@ -16,27 +16,22 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
-	test_pairs();
-	exit 0;
+	test_quote();
+	test_lambda();
 	test_begin();
 	test_error();
 	test_define();
-	test_lambda();
 	test_closure();
-	test_quote();
 	test_if();
+	test_pairs();
 }
 
 sub test_pairs {
 	my @test_cases = (
 #		"(quote (1 . 2))"	=> {1 => 2},
-#		"(quote (1 . 2))"	=> Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 1),
-#															   Schip::AST::Num->new(value => 2)]),
-#		"(quote (1  2 . 3))"	=> Schip::AST::Pair->new(value => [
-#									   		Schip::AST::Num->new(value => 1),
-#											Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 2),
-#																	   Schip::AST::Num->new(value => 3)]),
-#									]),
+#		"(quote (1 . 2))"	=> Schip::AST::Pair->new(Schip::AST::Num->new(1), Schip::AST::Num->new(2)),
+#		"(quote (1  2 . 3))"	=> Schip::AST::Pair->new(Schip::AST::Num->new(value => 1),
+#											Schip::AST::Pair->new(Schip::AST::Num->new(2), Schip::AST::Num->new(3)),
 		"(quote (1 . (2 3)))"	=> {deparse => '(1 2 3)', value => [1, 2, 3]},
 	);
 
@@ -172,14 +167,14 @@ sub test_if {
 
 sub test_atoms {
 	my $evaluator = Schip::Evaluator->new;
-	my @self_evalating_atoms = (
-		Schip::AST::Num->new(value => 1),
-		Schip::AST::Num->new(value => 0),
-		Schip::AST::Num->new(value => 10),
-		Schip::AST::Str->new(value => ""),
-		Schip::AST::Str->new(value => "hello"),
+	my @self_evaluating_atoms = (
+		Schip::AST::Num->new(1),
+		Schip::AST::Num->new(0),
+		Schip::AST::Num->new(10),
+		Schip::AST::Str->new(""),
+		Schip::AST::Str->new("hello"),
 	);
-	foreach my $atom (@self_evalating_atoms) {
+	foreach my $atom (@self_evaluating_atoms) {
 		my $result = $evaluator->evaluate_forms($atom);
 		isa_ok($result, ref $atom, "result is same type as atom: "
 			. $atom->value);
@@ -200,11 +195,11 @@ sub test_two_plus_two {
 
 sub make_two_plus_two {
 	my $form = Schip::AST::List->new;
-	$form->value([
-			Schip::AST::Sym->new(value => '+'),
-			Schip::AST::Num->new(value => 2),
-			Schip::AST::Num->new(value => 2),
-			]);
+	$form->unshift(
+			Schip::AST::Sym->new('+'),
+			Schip::AST::Num->new(2),
+			Schip::AST::Num->new(2),
+			);
 
 	return $form;
 }

@@ -14,7 +14,7 @@ sub invoke {
 
 sub sym_ok {
 	my $self = shift;
-	return Schip::AST::Sym->new(value => "'ok");
+	return Schip::AST::Sym->new("'ok");
 }
 
 sub install {
@@ -76,7 +76,7 @@ sub die_error {
 		my ($self, $args) = @_;
 		$self->die_unless_type('Num', $args);
 		my $sum = sum map { $_->value } @$args;
-		return Schip::AST::Num->new(value => $sum);
+		return Schip::AST::Num->new($sum);
 	}
 	sub symbol { '+' }
 
@@ -91,7 +91,7 @@ sub die_error {
 		my $sum = $args->[0]->value;
 		shift @$args;
 		$sum -= $_->value for @$args;
-		return Schip::AST::Num->new(value => $sum);
+		return Schip::AST::Num->new($sum);
 	}
 	sub symbol { '-' }
 
@@ -105,7 +105,7 @@ sub die_error {
 		$self->die_unless_type('Num', $args);
 		my $product = 1;
 		$product *= $_->value for @$args;
-		return Schip::AST::Num->new(value => $product);
+		return Schip::AST::Num->new($product);
 	}
 	sub symbol { '*' }
 
@@ -131,7 +131,7 @@ VAL:
 				last VAL;
 			}
 		}
-		return Schip::AST::Num->new(value => $same);
+		return Schip::AST::Num->new($same);
 	}
 	sub symbol { '=' }
 
@@ -183,7 +183,7 @@ VAL:
 
 	sub code {
 		my ($self, $args) = @_;
-		return Schip::AST::List->new(value => $args);
+		return Schip::AST::List->new(@$args);
 	}
 	sub symbol { 'list' }
 
@@ -199,10 +199,10 @@ VAL:
 		my $cdr = $args->[1];
 		# Consing with a list in cdr gives you a list
 		if ($cdr->isa('Schip::AST::List')) {
-			return Schip::AST::List->new(value => [$car, @{$cdr->value}]);
+			return Schip::AST::List->new($car, @{$cdr->value});
 		}
 		else {
-			return Schip::AST::Pair->new(value => [$car, $cdr]);
+			return Schip::AST::Pair->new($car, $cdr);
 		}
 	}
 	sub symbol { 'cons' }
