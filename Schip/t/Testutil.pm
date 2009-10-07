@@ -35,7 +35,7 @@ sub run_test_cases {
 
 		if (defined $expected) {
 			ok(defined $got, "form evaluated ok");
-			note("failed with errstr: " . $evaluator->errstr) if !$got;
+			note("failed with errstr: " . $evaluator->errstr) if !defined $got;
 			compare_ast_tree($got, $expected, "form [$code] evals to expected val");
 		}
 		else {
