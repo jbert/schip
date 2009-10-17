@@ -21,7 +21,7 @@ sub evaluate_forms {
 
 	my $value;
 	eval {
-		while (my $form = shift @forms) {
+		while (defined (my $form = shift @forms)) {
 			$value = $self->_evaluate_form($form);
 		}
 	};
@@ -41,7 +41,7 @@ sub _evaluate_form {
 	my $form = shift;
 
 	my $value;
-	die_error("UNDEFINED_FORM") unless $form;
+	die_error("UNDEFINED_FORM") unless defined $form;
 	if ($form->isa('Schip::AST::Sym')) {
 		if ($QUASIQUOTE_LEVEL == 0) {
 			$value = $self->env->lookup($form->value);
@@ -55,7 +55,7 @@ sub _evaluate_form {
 	elsif ($form->isa('Schip::AST::Atom')) {
 		$value = $form;
 	}
-	elsif ($form->isa('Schip::AST::List')) {
+	elsif ($form->is_list) {
 		$value = $self->_evaluate_list($form);
 	}
 	else {
@@ -68,77 +68,85 @@ sub _evaluate_list {
 	my $self		= shift;
 	my $list_form	= shift;
 
-	my @values			= @{$list_form->value};
+    if ($list_form->length == 0) {
+        if ($QUASIQUOTE_LEVEL) {
+            return $list_form;
+        }
+        else {
+            die_error("Eval of empty list")
+        }
+    }
 
-	my $invoker;
-	my $car	= shift @values;
-	if ($QUASIQUOTE_LEVEL == 0 || ($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
-		my $form_handler = $self->_lookup_special_form($car);
-		return $form_handler->($self, \@values) if $form_handler;
+	my $car	= $list_form->car;
+	if ($QUASIQUOTE_LEVEL > 0
+        && !($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
+		my @evaluated_args = $list_form->map(sub { my $form = shift; $self->_evaluate_form($form);});
+		return Schip::AST::List->new(@evaluated_args);
+	}
 
-		$invoker = $self->_evaluate_form($car);
-		die_error("Symbol in car position is not invokable: " . $car->value)
-			unless $invoker->isa('Schip::Evaluator::Invokable');
-	}
-	else {
-		unshift @values, $car if defined $car;
-	}
-	my @evaluated_args = map { $self->_evaluate_form($_) } @values;
+	my $form_handler = $self->_lookup_special_form($car);
+	return $form_handler->($self, $list_form) if $form_handler;
 
-	if ($invoker) {
-		my $result = $invoker->invoke(\@evaluated_args);
-		return $result;
-	}
-	else {
-		return Schip::AST::List->new(value => \@evaluated_args);
-	}
+	# Not a special form
+	my $invoker = $self->_evaluate_form($car);
+	die_error("Symbol in car position is not invokable: " . $car->value)
+		unless $invoker->isa('Schip::Evaluator::Invokable');
+
+	my @evaluated_args = $list_form->map(sub { $self->_evaluate_form($_[0]); }, 1);
+	my $result = $invoker->invoke(\@evaluated_args);
+	return $result;
 }
 
 my %special_forms = (
 	begin 		=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		my @vals = map { $eval->_evaluate_form($_) } @$args;
+		my @vals = $form->map(sub { $eval->_evaluate_form($_[0]); }, 1);
 		return $vals[-1];
 	},
 	define		=> sub {
 		my $eval = shift;
-		my $args = shift;
-		my $sym  = $args->[0];
+		my $form = shift;
+		my $cadr  = $form->cadr;
 
-		my ($sym_str, $body);
-		if ($sym->isa('Schip::AST::List')) {
+		my ($sym, $body);
+		if ($cadr->is_list) {
 			# (define (foo x y) expr) form
-			my $deflist = $sym;
-			$sym_str	= $deflist->value->[0]->value;
-			my @copy	= @{$deflist->value};
-			shift @copy;
-			$body 		= Schip::AST::List->new(value => [
-				Schip::AST::Sym->new(value => 'lambda'),
-				Schip::AST::List->new(value => \@copy),
-				$args->[1],
-			]);
+			my $deflist 	= $cadr;
+			$sym			= $deflist->car;
+			my $lambda_args	= $deflist->copy(1);
+			$body 			= Schip::AST::List->new(
+				Schip::AST::Sym->new('lambda'),
+                $lambda_args,
+				$form->caddr,
+			);
 		}
+		elsif ($cadr->isa('Schip::AST::Pair')) {
+            # Pair but not a list, treat as (a b c . rest)
+            die_error("Not implemented");
+        }
 		else {
 			# (define sym expr) form
-			$sym_str	= $sym->value;
-			$body		= $args->[1];
+			$sym		= $cadr;
+			$body		= $form->caddr;
 		}
+        die_error("Internal error $sym is not a sym")
+            unless $sym->isa('Schip::AST::Sym');
 		my $val = $eval->_evaluate_form($body);
-		$eval->env->add_define($sym_str => $val);
+		$eval->env->add_define($sym => $val);
 		if ($val->isa('Schip::Evaluator::Lambda')) {
 			# circular ref?
-			$val->env->add_define($sym_str => $val);
+			$val->env->add_define($sym => $val);
 		}
 		return $val;
 	},
 	lambda		=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		my $params	= $args->[0];
-		my $body	= $args->[1];
+		my $params	= $form->cadr;
+		my $body	= $form->caddr;
 
 		return Schip::Evaluator::Lambda->new(
 			params	=> $params,
@@ -148,39 +156,39 @@ my %special_forms = (
 	},
 	quote		=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		die_error("Not exactly one arg to quote") unless scalar @$args == 1;
-		return $args->[0];
+		die_error("Not exactly one arg to quote") unless $form->length == 2;
+		return $form->cadr;
 	},
 	quasiquote	=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		die_error("Not exactly one arg to quasiquote") unless scalar @$args == 1;
+		die_error("Not exactly one arg to quasiquote") unless $form->length == 2;
 		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL + 1;
-		return $eval->_evaluate_form($args->[0]);
+		return $eval->_evaluate_form($form->cadr);
 	},
 	unquote	=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		die_error("Not exactly one arg to unquote") unless scalar @$args == 1;
+		die_error("Not exactly one arg to unquote") unless $form->length == 2;
 		die_error("Unquote found outside quasiquote") unless $QUASIQUOTE_LEVEL > 0;
 		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL - 1;
-		return $eval->_evaluate_form($args->[0]);
+		return $eval->_evaluate_form($form->cadr);
 	},
 	if			=> sub {
 		my $eval = shift;
-		my $args = shift;
+        my $form = shift;
 
-		my $condition	= $args->[0];
-		my $trueform	= $args->[1];
-		my $falseform	= $args->[2];
-		die_error("No true branch")		unless $trueform;
-		die_error("No false branch")	unless $falseform;
+		my $condition	= $form->cadr;
+		my $trueform	= $form->caddr;
+		my $falseform	= $form->cadddr;
+		die_error("No true branch")		unless defined $trueform;
+		die_error("No false branch")	unless defined $falseform;
 		my $result 		= $eval->_evaluate_form($condition);
-		return unless $result;
+		return unless defined $result;
 		if (__PACKAGE__->_value_is_true($result)) {
 			return $eval->_evaluate_form($trueform);
 		}
@@ -217,7 +225,10 @@ sub _value_is_true {
 		when ($_->isa('Schip::AST::Num')) 	{ return $_->value != 0; }
 		when ($_->isa('Schip::AST::Str')) 	{ return $_->value ne ""; }
 		when ($_->isa('Schip::AST::Sym'))	{ return 1; }
-		default								{ die_error("Unhandled truth case"); }
+		when ($_->isa('Schip::AST::NilPair'))	{ return 0; }
+		default								{
+            die_error("Unhandled truth case: " . ref $node);
+        }
 	}
 }
 

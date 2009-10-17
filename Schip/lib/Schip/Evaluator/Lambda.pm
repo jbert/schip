@@ -11,18 +11,13 @@ sub invoke {
 	my $self = shift;
 	my $args = shift;
 
-	my @params = @{$self->params->value};
+	my $params = $self->params;
 #use Data::Dumper qw(Dumper);
 #print Dumper(\@params) . "\n";
 	my @args   = @{$args};
-	die "Got " . (scalar @args) . " args but expected " . scalar (@params)
-		unless scalar(@args) == scalar (@params);
-	my %frame;
-	while (@params) {
-		my $param	= shift @params;
-		my $arg		= shift @args;
-		$frame{$param->value} = $arg;
-	}
+	die "Got " . (scalar @args) . " args but expected " . $params->length
+		unless scalar(@args) == $params->length;
+	my %frame = $params->map(sub {$_[0] => shift @args});
 	my $env = $self->env;
 	$env->push_frame(%frame);
 	my $evaluator = Schip::Evaluator->new(env => $self->env);

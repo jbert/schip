@@ -1,7 +1,7 @@
-#!/usr/bin/perl
+#!usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 120;
+use Test::More tests => 118;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Parser'); }
@@ -20,13 +20,13 @@ $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, "root has 2 children");
+is($tree->length, 2, "root has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "display -> symbol");
-is($tree->value->[0]->value, "display", "with correct value");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "display -> symbol");
+is($tree->nth(0), "display", "with correct value");
 
-isa_ok($tree->value->[1], 'Schip::AST::Str', "string -> str");
-is($tree->value->[1]->value, 'hello, world', "with correct value");
+isa_ok($tree->nth(1), 'Schip::AST::Str', "string -> str");
+is($tree->nth(1), 'hello, world', "with correct value");
 
 
 note "parse string with quotes";
@@ -35,13 +35,13 @@ $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, "root has 2 children");
+is($tree->length, 2, "root has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "display -> symbol");
-is($tree->value->[0]->value, "display", "with correct value");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "display -> symbol");
+is($tree->nth(0), "display", "with correct value");
 
-isa_ok($tree->value->[1], 'Schip::AST::Str', "string -> str");
-is($tree->value->[1]->value, 'hello, \"world\"', "with correct value");
+isa_ok($tree->nth(1), 'Schip::AST::Str', "string -> str");
+is($tree->nth(1), 'hello, \"world\"', "with correct value");
 
 
 my %atom_type = (
@@ -56,7 +56,7 @@ my %atom_type = (
 );
 foreach my $atom_string (keys %atom_type) {
 	$tree = $parser->parse($atom_string);
-	ok($tree, "can parse $atom_string");
+	ok(defined $tree, "can parse $atom_string");
 	my $expected_type = $atom_type{$atom_string};
 	isa_ok($tree, "Schip::AST::$expected_type", "tree is-a expected type");
 }
@@ -67,25 +67,25 @@ $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 3, "root has 3 children");
+is($tree->length, 3, "root has 3 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "lambda -> symbol");
-is($tree->value->[0]->value, "lambda", "with correct value");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "lambda -> symbol");
+is($tree->nth(0), "lambda", "with correct value");
 
-my $args = $tree->value->[1];
+my $args = $tree->nth(1);
 ok($args, "can extract args");
-is($args->value->length, 1, "args has length 1");
-is($args->value->[0]->value, "x", "with correct value");
+is($args->length, 1, "args has length 1");
+is($args->nth(0), "x", "with correct value");
 
-my $body = $tree->value->[2];
+my $body = $tree->nth(2);
 ok($body, "can extract body");
-is($body->value->length, 3, "body has length 3");
-is($body->value->[0]->value, "+", "with correct value");
-isa_ok($body->value->[0], 'Schip::AST::Sym', "+ -> symbol");
-is($body->value->[1]->value, "2", "with correct value");
-isa_ok($body->value->[1], 'Schip::AST::Num', "2 -> symbol");
-is($body->value->[2]->value, "x", "with correct value");
-isa_ok($body->value->[2], 'Schip::AST::Sym', "x -> symbol");
+is($body->length, 3, "body has length 3");
+is($body->nth(0), "+", "with correct value");
+isa_ok($body->nth(0), 'Schip::AST::Sym', "+ -> symbol");
+is($body->nth(1), "2", "with correct value");
+isa_ok($body->nth(1), 'Schip::AST::Num', "2 -> symbol");
+is($body->nth(2), "x", "with correct value");
+isa_ok($body->nth(2), 'Schip::AST::Sym', "x -> symbol");
 is($tree->deparse, $code, "deparse correctly");
 
 note "parse the empty list";
@@ -93,8 +93,9 @@ $code = "()";
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 0, "root has 0 children");
+isa_ok($tree, 'Schip::AST::NilPair', "tree is-a nilpair");
+ok($tree->is_list, "tree is-a list");
+is($tree->length, 0, "root has 0 children");
 
 note "parse the quoted empty list";
 $code = "'()";
@@ -102,11 +103,10 @@ $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, "root has 2 children");
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'quote', "first val quote");
-isa_ok($tree->value->[1], 'Schip::AST::List', "second val list");
-is($tree->value->[1]->value->length, 0, "which is empty");
+is($tree->length, 2, "root has 2 children");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
+is($tree->nth(0), 'quote', "first val quote");
+isa_ok($tree->nth(1), 'Schip::AST::NilPair', "second val nilpair");
 
 note "parse a list with empty string";
 $code = '("")';
@@ -114,22 +114,22 @@ $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 1, "root has 0 children");
+is($tree->length, 1, "root has 0 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Str', "found string");
-is($tree->value->[0]->value, "", "and it's empty");
+isa_ok($tree->nth(0), 'Schip::AST::Str', "found string");
+is($tree->nth(0), "", "and it's empty");
 
 $code = "'(a b c)";
 $tree = $parser->parse($code);
 ok($tree, "can parse quoted list");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, " has 2 children");
+is($tree->length, 2, " has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'quote', "first child is a sym called quote");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
+is($tree->nth(0), 'quote', "first child is a sym called quote");
 
-isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
-is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+is($tree->nth(1)->length, 3, "second child has 3 elements");
 
 $code = "(a '(b c))";
 $tree = $parser->parse($code);
@@ -150,36 +150,36 @@ $code = '`(a b c)';
 $tree = $parser->parse($code);
 ok($tree, "can parse quasiquoted list");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, " has 2 children");
+is($tree->length, 2, " has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'quasiquote', "first child is a sym called quasiquote");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
+is($tree->nth(0), 'quasiquote', "first child is a sym called quasiquote");
 
-isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
-is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+is($tree->nth(1)->length, 3, "second child has 3 elements");
 
 
 $code = "`(a ,b ,@(cdr '(1 2 3)))";
 $tree = $parser->parse($code);
 ok($tree, "can parse complex qq list");
 isa_ok($tree, 'Schip::AST::List', "tree is-a list");
-is($tree->value->length, 2, " has 2 children");
+is($tree->length, 2, " has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'quasiquote', "first child is a sym called quasiquote");
+isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
+is($tree->nth(0), 'quasiquote', "first child is a sym called quasiquote");
 
-isa_ok($tree->value->[1], 'Schip::AST::List', "second child is a list");
-is($tree->value->[1]->value->length, 3, "second child has 3 elements");
+isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+is($tree->nth(1)->length, 3, "second child has 3 elements");
 
-isa_ok($tree->value->[1]->value->[1], 'Schip::AST::List', "can find list where we're expecting comma");
-is($tree->value->[1]->value->[1]->value->length, 2, "comma list has 2 elts");
-isa_ok($tree->value->[1]->value->[1]->value->[0], 'Schip::AST::Sym', "2 elt list begins with symbol");
-is($tree->value->[1]->value->[1]->value->[0]->value, 'unquote', ", becomes 'unquote' symbol");
+isa_ok($tree->nth(1)->nth(1), 'Schip::AST::List', "can find list where we're expecting comma");
+is($tree->nth(1)->nth(1)->length, 2, "comma list has 2 elts");
+isa_ok($tree->nth(1)->nth(1)->nth(0), 'Schip::AST::Sym', "2 elt list begins with symbol");
+is($tree->nth(1)->nth(1)->nth(0), 'unquote', ", becomes 'unquote' symbol");
 
-isa_ok($tree->value->[1]->value->[2], 'Schip::AST::List', "can find list where we're expecting comma-at");
-is($tree->value->[1]->value->[2]->value->length, 2, "comma-at list has 2 elts");
-isa_ok($tree->value->[1]->value->[2]->value->[0], 'Schip::AST::Sym', "2 elt list begins with symbol");
-is($tree->value->[1]->value->[2]->value->[0]->value, 'unquote-splicing', ", becomes 'unquote-splicing' symbol");
+isa_ok($tree->nth(1)->nth(2), 'Schip::AST::List', "can find list where we're expecting comma-at");
+is($tree->nth(1)->nth(2)->length, 2, "comma-at list has 2 elts");
+isa_ok($tree->nth(1)->nth(2)->nth(0), 'Schip::AST::Sym', "2 elt list begins with symbol");
+is($tree->nth(1)->nth(2)->nth(0), 'unquote-splicing', ", becomes 'unquote-splicing' symbol");
 
 
 
@@ -187,12 +187,11 @@ $code = "(a . b)";
 $tree = $parser->parse($code);
 ok($tree, "can parse dotted pair");
 isa_ok($tree, 'Schip::AST::Pair', "tree is-a pair");
-is($tree->value->length, 2, " has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'a', "first child is a sym called a");
-isa_ok($tree->value->[1], 'Schip::AST::Sym', "second child is a sym");
-is($tree->value->[1]->value, 'b', "second child is a sym called b");
+isa_ok($tree->car, 'Schip::AST::Sym', "first child is a sym");
+is($tree->car, 'a', "first child is a sym called a");
+isa_ok($tree->cdr, 'Schip::AST::Sym', "second child is a sym");
+is($tree->cdr, 'b', "second child is a sym called b");
 
 
 
@@ -201,16 +200,15 @@ $code = "(a b . c)";
 $tree = $parser->parse($code);
 ok($tree, "can parse dotted list");
 isa_ok($tree, 'Schip::AST::Pair', "tree is-a pair");
-is($tree->value->length, 2, " has 2 children");
 
-isa_ok($tree->value->[0], 'Schip::AST::Sym', "first child is a sym");
-is($tree->value->[0]->value, 'a', "first child is a sym called a");
+isa_ok($tree->car, 'Schip::AST::Sym', "first child is a sym");
+is($tree->car, 'a', "first child is a sym called a");
 
-isa_ok($tree->value->[1], 'Schip::AST::Pair', "second child is a pair");
-isa_ok($tree->value->[1]->value->[0], 'Schip::AST::Sym', "with sym at car");
-is($tree->value->[1]->value->[0]->value, 'b', "called b");
-isa_ok($tree->value->[1]->value->[1], 'Schip::AST::Sym', "and a sym at cdr");
-is($tree->value->[1]->value->[1]->value, 'c', "called c");
+isa_ok($tree->cdr, 'Schip::AST::Pair', "second child is a pair");
+isa_ok($tree->cdr->car, 'Schip::AST::Sym', "with sym at car");
+is($tree->cdr->car, 'b', "called b");
+isa_ok($tree->cdr->cdr, 'Schip::AST::Sym', "and a sym at cdr");
+is($tree->cdr->cdr, 'c', "called c");
 
 exit 0;
 

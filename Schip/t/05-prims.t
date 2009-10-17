@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 130;
+use Test::More tests => 189;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -77,8 +77,7 @@ sub test_cons_car_cdr {
 		"(cons 1 '())"			=> {deparse => '(cons 1 (quote ()))', value => [1]},
 		"(cons 1 (cons 2 '()))"	=> {deparse => '(cons 1 (cons 2 (quote ())))', value => [1, 2]},
 		# Consing otherwise makes a pair
-		'(cons 1 2)'			=> Schip::AST::Pair->new(value => [Schip::AST::Num->new(value => 1),
-																   Schip::AST::Num->new(value => 2)]),
+		'(cons 1 2)'			=> Schip::AST::Pair->new(Schip::AST::Num->new(1), Schip::AST::Num->new(2)),
 
 		# car and cdr of pair
 		'(car (cons 1 2))'			=> 1,

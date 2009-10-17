@@ -34,13 +34,12 @@ sub run_test_cases {
 		my $got			= $evaluator->evaluate_forms(@forms);
 
 		if (defined $expected) {
-			ok($got, "form evaluated ok");
-			note("failed with errstr: " . $evaluator->errstr) if !$got;
+			ok(defined $got, "form evaluated ok");
+			note("failed with errstr: " . $evaluator->errstr) if !defined $got;
 			compare_ast_tree($got, $expected, "form [$code] evals to expected val");
 		}
 		else {
 			ok(!defined $got, "form returned undef");
-			return;
 		}
 	}
 }
@@ -53,24 +52,20 @@ sub compare_ast_tree {
 
 	if (ref $expected) {
 		if (ref $expected eq 'ARRAY') {
-			isa_ok($got, 'Schip::AST::List', "got a list value");
-			is($got->value->length,
+			ok($got->is_list, "got a list value");
+			is($got->length,
 					scalar @$expected,
 					"got a list the right length " . scalar @$expected);
 			my $index = 1;
-			while(@$expected) {
-				my $expected_elt = shift @$expected;
-				my $got_elt = $got->value->shift;
-				compare_ast_tree($got_elt, $expected_elt, $str . ".$index");
-				++$index;
-			}
+			$got->foreach(sub {
+				compare_ast_tree($_[0], shift(@$expected), $str . "." . ++$index);
+			});
 		}
 		elsif (ref $expected eq 'HASH') {
 			die "hash found with > 2 elts" unless scalar keys %$expected == 1;
 			isa_ok($got, 'Schip::AST::Pair', "got a pair value");
-			is($got->value->length, 2, "pair has length 2 (phew)");
-			compare_ast_tree($got->value->[0], keys %$expected, "LH of pair matches");
-			compare_ast_tree($got->value->[1], values %$expected, "RH of pair matches");
+			compare_ast_tree($got->car, keys %$expected, "LH of pair matches");
+			compare_ast_tree($got->cdr, values %$expected, "RH of pair matches");
 		}
 		elsif ($expected->isa('Schip::AST::Node')) {
 			ok($expected->equals($got), "values compare ok")
