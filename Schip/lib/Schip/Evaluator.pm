@@ -234,11 +234,6 @@ sub die_error {
 	die Schip::Evaluator::Error->new(info => $error_str);
 }
 
-sub errstr {
-	my $self = shift;
-	return $self->errstr;
-}
-
 sub error {
 	my $self = shift;
 	my $str  = shift;
