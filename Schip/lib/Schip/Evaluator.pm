@@ -117,14 +117,14 @@ my %special_forms = (
 		my $cadr  = $form->cadr;
 
 		my ($sym, $body);
-		if ($cadr->isa('Schip::AST::List')) {
+		if ($cadr->is_list) {
 			# (define (foo x y) expr) form
 			my $deflist 	= $cadr;
 			$sym			= $deflist->car;
-			my @cdr_copy	= $deflist->copy(1);
+			my $lambda_args	= $deflist->copy(1);
 			$body 			= Schip::AST::List->new(
 				Schip::AST::Sym->new('lambda'),
-				Schip::AST::List->new(@cdr_copy),
+                $lambda_args,
 				$form->caddr,
 			);
 		}

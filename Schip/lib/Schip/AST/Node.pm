@@ -323,7 +323,7 @@ use Carp;
 	# Single implementation
 
 	sub copy {
-		my ($self, $skip) = shift;
+		my ($self, $skip) = @_;
 		my $idfunc = sub { $_[0]; };
 		my @elts = $self->map($idfunc, $skip);
 		return Schip::AST::List->new(@elts);
