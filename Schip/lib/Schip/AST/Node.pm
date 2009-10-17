@@ -325,7 +325,7 @@ use Carp;
 	sub copy {
 		my ($self, $skip) = shift;
 		my $idfunc = sub { $_[0]; };
-		my @elts = $self->_clist->map($idfunc, $skip);
+		my @elts = $self->map($idfunc, $skip);
 		return Schip::AST::List->new(@elts);
 	}
 
