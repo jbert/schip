@@ -47,7 +47,7 @@ use Carp;
 	sub equals { 
 		my $self = shift;
 		my $rhs  = shift;
-		return ref $self eq ref $rhs && $self eq $rhs;
+		return ref $self eq ref $rhs && $$self eq $$rhs;
 	}
 }
 
