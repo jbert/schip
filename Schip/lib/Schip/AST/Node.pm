@@ -125,7 +125,8 @@ use Carp;
 		my $self = shift;
 		if (@_) {
 			my $val = shift;
-			my $is_clist = $val->isa('Schip::AST::Pair') && $val->is_clist;
+			my $is_clist = ($val->isa('Schip::AST::Pair')
+                         || $val->isa('Schip::AST::List')) && $val->is_clist;
 			$self->is_clist($is_clist);
 			$self->{cdr} = $val;
 		}
@@ -256,8 +257,6 @@ use Carp;
 	# ============================================================
 	# Dual implementation elts/clist
 
-    sub is_list { 1; }
-
 	sub unshift {
 		my ($self, @elts) = @_;
 		if ($self->_elts) {
@@ -321,6 +320,12 @@ use Carp;
 
 	# ============================================================
 	# Single implementation
+
+    sub is_list { 1; }
+    sub is_clist {
+        my $self = shift;
+        return defined $self->_clist;
+    }
 
 	sub copy {
 		my ($self, $skip) = @_;

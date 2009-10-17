@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 182;
+use Test::More tests => 195;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,10 +14,10 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
+	test_pairs();
 	test_if();
     test_atoms();
     test_two_plus_two();
-	test_pairs();
 	test_quote();
 	test_lambda();
 	test_begin();
@@ -28,11 +28,12 @@ sub run_main_tests {
 
 sub test_pairs {
 	my @test_cases = (
-#		"(quote (1 . 2))"	=> {1 => 2},
-#		"(quote (1 . 2))"	=> Schip::AST::Pair->new(Schip::AST::Num->new(1), Schip::AST::Num->new(2)),
-#		"(quote (1  2 . 3))"	=> Schip::AST::Pair->new(Schip::AST::Num->new(value => 1),
-#											Schip::AST::Pair->new(Schip::AST::Num->new(2), Schip::AST::Num->new(3)),
-		"(quote (1 . (2 3)))"	=> {deparse => '(quote (1 2 3))', value => {1, [2, 3]}},
+		"(quote (1 . 2))"	    => {1 => 2},
+		"(quote (1  2 . 3))"	=> {1 => {2 => 3}},
+		"(quote (1 . (2 3)))"	=> {
+            deparse =>  "(quote (1 2 3))",
+            value   =>  [1, 2, 3],
+        },
 	);
 
 	run_test_cases("test pairs", @test_cases);
