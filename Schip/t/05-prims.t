@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 130;
+use Test::More tests => 189;
 use Moose::Autobox;
 
 use Schip::Evaluator;
