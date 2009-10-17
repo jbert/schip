@@ -40,7 +40,6 @@ sub run_test_cases {
 		}
 		else {
 			ok(!defined $got, "form returned undef");
-			return;
 		}
 	}
 }
