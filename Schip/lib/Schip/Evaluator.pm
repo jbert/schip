@@ -122,11 +122,17 @@ my %special_forms = (
 				$form->caddr,
 			);
 		}
+		elsif ($cadr->isa('Schip::AST::Pair')) {
+            # Pair but not a list, treat as (a b c . rest)
+            die_error("Not implemented");
+        }
 		else {
 			# (define sym expr) form
 			$sym		= $cadr;
 			$body		= $form->caddr;
 		}
+        die_error("Internal error $sym is not a sym")
+            unless $sym->isa('Schip::AST::Sym');
 		my $val = $eval->_evaluate_form($body);
 		$eval->env->add_define($sym => $val);
 		if ($val->isa('Schip::Evaluator::Lambda')) {
