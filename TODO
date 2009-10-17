@@ -3,21 +3,21 @@ For 0.2:
 
 DONE - use s.ast.list methods for car/cdr etc primitives
 
-- fix dotted pairs + lists :-(
+DONE - fix dotted pairs + lists :-(
 	- e.g. need to be able to parse (1 . (2 3)) correctly. and (1 2 . 3)
 
 DONE - change s.ast.node.new to drop value
 
-- have s.ast.list->[n] call ->nth(n)?
+NOTNEEDED - have s.ast.list->[n] call ->nth(n)?
 	- or make it is-a list with sugar?
 
-- add autotests for list/pair interaction
+NO - add autotests for list/pair interaction
 	- make a list
 	- take cddr of it
 	- mutate the original list
 	- check the taken value has mutated
 
-- drop ->value accessor?
+DONE - drop ->value accessor?
 	- have per-type accessor?
 	- keep ->value for atom
 
