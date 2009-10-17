@@ -182,7 +182,7 @@ my %special_forms = (
 		die_error("No true branch")		unless $trueform;
 		die_error("No false branch")	unless $falseform;
 		my $result 		= $eval->_evaluate_form($condition);
-		return unless $result;
+		return unless defined $result;
 		if (__PACKAGE__->_value_is_true($result)) {
 			return $eval->_evaluate_form($trueform);
 		}
@@ -219,7 +219,10 @@ sub _value_is_true {
 		when ($_->isa('Schip::AST::Num')) 	{ return $_->value != 0; }
 		when ($_->isa('Schip::AST::Str')) 	{ return $_->value ne ""; }
 		when ($_->isa('Schip::AST::Sym'))	{ return 1; }
-		default								{ die_error("Unhandled truth case"); }
+		when ($_->isa('Schip::AST::NilPair'))	{ return 0; }
+		default								{
+            die_error("Unhandled truth case: " . ref $node);
+        }
 	}
 }
 

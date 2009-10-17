@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 106;
+use Test::More tests => 182;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,6 +14,7 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
+	test_if();
     test_atoms();
     test_two_plus_two();
 	test_pairs();
@@ -23,7 +24,6 @@ sub run_main_tests {
 	test_error();
 	test_define();
 	test_closure();
-	test_if();
 }
 
 sub test_pairs {
