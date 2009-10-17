@@ -179,8 +179,8 @@ my %special_forms = (
 		my $condition	= $form->cadr;
 		my $trueform	= $form->caddr;
 		my $falseform	= $form->cadddr;
-		die_error("No true branch")		unless $trueform;
-		die_error("No false branch")	unless $falseform;
+		die_error("No true branch")		unless defined $trueform;
+		die_error("No false branch")	unless defined $falseform;
 		my $result 		= $eval->_evaluate_form($condition);
 		return unless defined $result;
 		if (__PACKAGE__->_value_is_true($result)) {
