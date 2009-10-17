@@ -53,7 +53,7 @@ sub compare_ast_tree {
 
 	if (ref $expected) {
 		if (ref $expected eq 'ARRAY') {
-			isa_ok($got, 'Schip::AST::List', "got a list value");
+			ok($got->is_list, "got a list value");
 			is($got->length,
 					scalar @$expected,
 					"got a list the right length " . scalar @$expected);

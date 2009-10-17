@@ -49,6 +49,8 @@ use Carp;
 		my $rhs  = shift;
 		return ref $self eq ref $rhs && $$self eq $$rhs;
 	}
+
+    sub is_list { 0; }
 }
 
 {
@@ -90,6 +92,16 @@ use Carp;
 	sub description { 'string'; }
 }
 
+
+=pod 
+
+...ok. wtf do we do about lists
+    . is it ok that an empty s.ast.list has-a _clist which is the nilpair?
+    . should NilPair == the empty list instead?
+    . s.ast.list should be an implementation detail in the ast tree
+
+=cut
+
 {
 	package Schip::AST::Pair;
 	use base qw(Schip::AST::Node);
@@ -98,6 +110,7 @@ use Carp;
 	sub new {
 		my ($class, $car, $cdr) = @_;
 		my $self = $class->SUPER::new({car => $car});
+        $cdr->break_to_clist if $cdr->isa('Schip::AST::List');
 		$self->cdr($cdr);	# Sets is_clist too
 		return $self;
 	}
@@ -158,7 +171,7 @@ use Carp;
 		my ($self, $func) = @_;
 		return unless $self->is_clist;
 		$func->($self->car);
-		return $self->cdr->foreach;
+		return $self->cdr->foreach($func);
 	}
 
 	sub map {
@@ -172,6 +185,11 @@ use Carp;
 			return ($func->($self->car), $self->cdr->map($func));
 		}
 	}
+
+    sub is_list {
+        my $self = shift;
+        return $self->is_clist;
+    }
 }
 
 {
@@ -196,6 +214,7 @@ use Carp;
 	sub foreach		{ undef; }
 	sub map			{ (); }
 	sub is_clist	{ 1; }
+    sub is_list     { 1; }
 }
 
 {
@@ -214,13 +233,12 @@ use Carp;
 
 	sub cdr {
 		my $self = shift;
-		$self->_break_to_clist if $self->_elts;
+		$self->break_to_clist;
 		return $self->_clist->cdr;
 	}
 
-	sub _break_to_clist {
+	sub break_to_clist {
 		my $self = shift;
-		die "Internal error: already a clist" if $self->_clist;
 		my $clist = __PACKAGE__->_prepend_list_to_clist($self->_elts, Schip::AST::NilPair->new);
 		$self->_clist($clist);
 		$self->_elts(undef);
@@ -237,6 +255,8 @@ use Carp;
 
 	# ============================================================
 	# Dual implementation elts/clist
+
+    sub is_list { 1; }
 
 	sub unshift {
 		my ($self, @elts) = @_;

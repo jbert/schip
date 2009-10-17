@@ -93,7 +93,8 @@ $code = "()";
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+isa_ok($tree, 'Schip::AST::NilPair', "tree is-a nilpair");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 0, "root has 0 children");
 
 note "parse the quoted empty list";
@@ -105,8 +106,7 @@ isa_ok($tree, 'Schip::AST::List', "tree is-a list");
 is($tree->length, 2, "root has 2 children");
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
 is($tree->nth(0), 'quote', "first val quote");
-isa_ok($tree->nth(1), 'Schip::AST::List', "second val list");
-is($tree->nth(1)->length, 0, "which is empty");
+isa_ok($tree->nth(1), 'Schip::AST::NilPair', "second val nilpair");
 
 note "parse a list with empty string";
 $code = '("")';
