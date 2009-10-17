@@ -163,28 +163,28 @@ my %special_forms = (
 	},
 	quasiquote	=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		die_error("Not exactly one arg to quasiquote") unless scalar @$args == 1;
+		die_error("Not exactly one arg to quasiquote") unless $form->length == 2;
 		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL + 1;
-		return $eval->_evaluate_form($args->[0]);
+		return $eval->_evaluate_form($form->cadr);
 	},
 	unquote	=> sub {
 		my $eval = shift;
-		my $args = shift;
+		my $form = shift;
 
-		die_error("Not exactly one arg to unquote") unless scalar @$args == 1;
+		die_error("Not exactly one arg to unquote") unless $form->length == 2;
 		die_error("Unquote found outside quasiquote") unless $QUASIQUOTE_LEVEL > 0;
 		local $QUASIQUOTE_LEVEL = $QUASIQUOTE_LEVEL - 1;
-		return $eval->_evaluate_form($args->[0]);
+		return $eval->_evaluate_form($form->cadr);
 	},
 	if			=> sub {
 		my $eval = shift;
-		my $args = shift;
+        my $form = shift;
 
-		my $condition	= $args->[0];
-		my $trueform	= $args->[1];
-		my $falseform	= $args->[2];
+		my $condition	= $form->cadr;
+		my $trueform	= $form->caddr;
+		my $falseform	= $form->cadddr;
 		die_error("No true branch")		unless $trueform;
 		die_error("No false branch")	unless $falseform;
 		my $result 		= $eval->_evaluate_form($condition);
