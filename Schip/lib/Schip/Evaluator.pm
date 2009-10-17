@@ -55,7 +55,7 @@ sub _evaluate_form {
 	elsif ($form->isa('Schip::AST::Atom')) {
 		$value = $form;
 	}
-	elsif ($form->isa('Schip::AST::List')) {
+	elsif ($form->is_list) {
 		$value = $self->_evaluate_list($form);
 	}
 	else {
@@ -68,27 +68,21 @@ sub _evaluate_list {
 	my $self		= shift;
 	my $list_form	= shift;
 
-	die_error("Eval of empty list") if $list_form->length == 0;
-	my $car	= $list_form->car;
+    if ($list_form->length == 0) {
+        if ($QUASIQUOTE_LEVEL) {
+            return $list_form;
+        }
+        else {
+            die_error("Eval of empty list")
+        }
+    }
 
+	my $car	= $list_form->car;
 	if ($QUASIQUOTE_LEVEL > 0
-		&& !($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
+        && !($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
 		my @evaluated_args = $list_form->map(sub { my $form = shift; $self->_evaluate_form($form);});
 		return Schip::AST::List->new(@evaluated_args);
 	}
-
-=pod
-
-TODO:
-	- do we want "safe cdr" method on list which will give cdr, but we promise to not
-	modify it or save references to it? Or can we instead get away with other methods/coding
-	style (foreach-but-not-first?)
-	- rewrite interface to special forms. they now get the whole form and should poke
-	at it and try to avoid calling ->cdr (otherwise will break list to clist)
-	- this method needs to stop shift/unshift on values. If it's not a special form, then
-	just evaluate all forms, then pass cdr to
-
-=cut
 
 	my $form_handler = $self->_lookup_special_form($car);
 	return $form_handler->($self, $list_form) if $form_handler;
