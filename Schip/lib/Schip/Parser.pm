@@ -47,7 +47,12 @@ sub _decorate_token_tree {
 	given ($type) {
 		when ('list')	{
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
-			return Schip::AST::List->new(@list);
+            if (@list) {
+                return Schip::AST::List->new(@list);
+            }
+            else {
+                return Schip::AST::NilPair->new;
+            }
 		}
 		when ('pair')	{
 			my @pair = map { $self->_decorate_token_tree($_) } @$value;
