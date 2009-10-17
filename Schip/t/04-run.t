@@ -10,12 +10,12 @@ use Schip::Parser;
 use lib 't';
 require Testutil;
 
-test_atoms();
-test_two_plus_two();
 run_main_tests();
 exit 0;
 
 sub run_main_tests {
+    test_atoms();
+    test_two_plus_two();
 	test_pairs();
 	test_quote();
 	test_lambda();
