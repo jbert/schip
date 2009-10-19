@@ -24,7 +24,7 @@ sub install {
 	my %frame;
 	foreach my $op (
 		qw(error display newline),
-		qw(add subtract equals multiply),
+		qw(add subtract numequals equals multiply),
 		qw(cons car cdr list),
 		qw(not)
 		) {
@@ -56,7 +56,7 @@ sub die_unless_type {
 	my @wrong_type = grep { !$_->isa($class) } @$args;
 	if (@wrong_type) {
 		my $err = "Non-" . $class->description . " argument(s) to " . $self->symbol . ":"
-			. join(", ", map { $_->value } @wrong_type);
+			. join(", ", @wrong_type);
 		$self->die_error($err);
 	}
 }
@@ -116,25 +116,31 @@ sub die_error {
 
 	sub code {
 		my ($self, $args) = @_;
-		$self->die_numargs($args, 2, 1);
+        $self->die_numargs($args, 2, 1);
+        my @copy = @$args;
+        my $first = shift @copy;
+        my $same = 1;
+    VAL:
+        foreach my $val (@copy) {
+            unless ($val->equals($first)) {
+                $same = 0;
+                last VAL;
+            }
+        }
+        return Schip::AST::Num->new($same);
+    }
+	sub symbol { 'equal?' }
+
+	package Schip::Evaluator::Primitive::Numequals;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive::Equals);
+
+	sub code {
+		my ($self, $args) = @_;
 		$self->die_unless_type('Num', $args);
-		# Controversal? have seperate bool type?
-
-		my $first_val = $args->[0]->value;
-		my @copy = @$args;
-		shift @copy;
-		my $same = 1;
-VAL:
-		foreach my $val (@copy) {
-			if ($val->value != $first_val) {
-				$same = 0;
-				last VAL;
-			}
-		}
-		return Schip::AST::Num->new($same);
-	}
+        return $self->SUPER::code($args);
+    }
 	sub symbol { '=' }
-
 
 	package Schip::Evaluator::Primitive::Error;
 	use Moose;

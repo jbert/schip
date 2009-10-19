@@ -20,6 +20,11 @@
 	(display "different"))
 (newline)
 
+(define (map f l)
+    (if (null? l)
+        '()
+        (cons (f (car l)) (map f (cdr l)))))
+
 (define my-forms '(
 		(1 2 . 3)
 		(1 . (2 . 3))

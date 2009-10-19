@@ -111,21 +111,17 @@ my %special_forms = (
 		my $cadr  = $form->cadr;
 
 		my ($sym, $body);
-		if ($cadr->is_list) {
+		if ($cadr->is_pair) {
 			# (define (foo x y) expr) form
 			my $deflist 	= $cadr;
 			$sym			= $deflist->car;
-			my $lambda_args	= $deflist->copy(1);
+			my $lambda_args	= $deflist->cdr;
 			$body 			= Schip::AST::List->new(
 				Schip::AST::Sym->new('lambda'),
                 $lambda_args,
 				$form->caddr,
 			);
 		}
-		elsif ($cadr->isa('Schip::AST::Pair')) {
-            # Pair but not a list, treat as (a b c . rest)
-            die_error("Not implemented");
-        }
 		else {
 			# (define sym expr) form
 			$sym		= $cadr;
@@ -145,11 +141,32 @@ my %special_forms = (
 		my $eval = shift;
 		my $form = shift;
 
-		my $params	= $form->cadr;
+		my $raw_params = $form->cadr;
+        my ($params, $rest);
+        if ($raw_params->is_list) {
+            my @vals;
+            $raw_params->foreach(sub { push @vals, shift; });
+            $params = Schip::AST::List->new(@vals);
+        }
+        else {
+            my @params;
+            my $node = $raw_params;
+        NODE:
+            while ($node) {
+                push @params, $node->car;
+                $node = $node->cdr;
+                if (!$node->is_pair) {
+                    $rest = $node;
+                    last NODE;
+                }
+            }
+            $params = Schip::AST::List->new(@params);
+        }
 		my $body	= $form->caddr;
 
 		return Schip::Evaluator::Lambda->new(
 			params	=> $params,
+            rest    => $rest,
 			body	=> $body,
 			env		=> $eval->env->clone,
 		);
@@ -227,7 +244,7 @@ sub _value_is_true {
 		when ($_->isa('Schip::AST::Sym'))	{ return 1; }
 		when ($_->isa('Schip::AST::NilPair'))	{ return 0; }
 		default								{
-            die_error("Unhandled truth case: " . ref $node);
+            die_error("Unhandled truth case: " . (ref $node ? ref $node : $node));
         }
 	}
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 195;
+use Test::More tests => 234;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,12 +14,13 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
+	test_lambda();
+	test_dotted_lambda();
 	test_pairs();
 	test_if();
     test_atoms();
     test_two_plus_two();
 	test_quote();
-	test_lambda();
 	test_begin();
 	test_error();
 	test_define();
@@ -98,6 +99,19 @@ sub test_define {
 	run_test_cases("test define", @test_cases);
 }
 
+sub test_dotted_lambda {
+	my @test_cases = (
+		"((lambda (x y . z) z) 0)"	        => undef,
+		"((lambda (x y . z) z))"	        => undef,
+		"((lambda (x . y) x) 0)"		    => 0,
+		"((lambda (x y . z) x) 0 1)"	    => 0,
+		"((lambda (x y . z) y) 0 1)"	    => 1,
+		"((lambda (x y . z) z) 0 1 2)"	    => [2],
+		"((lambda (x y . z) z) 0 1 2 3)"	=> [2, 3],
+	);
+	run_test_cases("test dotted lambda", @test_cases);
+}
+
 sub test_lambda {
 	my @test_cases = (
 		# Test lambda
@@ -108,6 +122,8 @@ sub test_lambda {
 		"((lambda (x) (+ 2 x)) 2)"		=> 4,
 		"((lambda (x) (+ x x)) 3)"		=> 6,
 		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
+		"((lambda (x y) y) 3 4)"	    => 4,
+		"((lambda (x y) x) 3 4)"	    => 3,
 	);
 	run_test_cases("test lambda", @test_cases);
 }

@@ -55,6 +55,7 @@ DONE - mad Parse::RecDescent errors, but only when running under 'make test'
 
 ==================================================
 
+- lambda->invoke spins up a new evaluator. That's probably an error?
 
 - allow doc strings
 

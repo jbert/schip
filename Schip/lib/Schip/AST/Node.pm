@@ -51,6 +51,7 @@ use Carp;
 	}
 
     sub is_list { 0; }
+    sub is_pair { 0; }
 }
 
 {
@@ -191,6 +192,7 @@ use Carp;
         my $self = shift;
         return $self->is_clist;
     }
+    sub is_pair { 1; }
 }
 
 {
@@ -322,17 +324,13 @@ use Carp;
 	# Single implementation
 
     sub is_list { 1; }
+    # The hierarchy is a bit broken here. ::List should really be is-a ::Pair
+    # (a pair is something which provides the car+cdr methods)
+    sub is_pair { 1; }
     sub is_clist {
         my $self = shift;
         return defined $self->_clist;
     }
-
-	sub copy {
-		my ($self, $skip) = @_;
-		my $idfunc = sub { $_[0]; };
-		my @elts = $self->map($idfunc, $skip);
-		return Schip::AST::List->new(@elts);
-	}
 
 	sub to_string {
 		my ($self, $deparse, $parent_hid_dot) = @_;
