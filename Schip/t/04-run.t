@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 234;
+use Test::More tests => 250;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,8 +14,8 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
-	test_lambda();
 	test_dotted_lambda();
+	test_lambda();
 	test_pairs();
 	test_if();
     test_atoms();
@@ -108,7 +108,10 @@ sub test_dotted_lambda {
 		"((lambda (x y . z) y) 0 1)"	    => 1,
 		"((lambda (x y . z) z) 0 1 2)"	    => [2],
 		"((lambda (x y . z) z) 0 1 2 3)"	=> [2, 3],
-	);
+    );
+
+    my $code = "((lambda (first second . rest) (list first second rest)) 1 2 3 4 5 6 7 8 9)";
+    push @test_cases, $code => [1, 2, [3, 4, 5, 6, 7, 8, 9]];
 	run_test_cases("test dotted lambda", @test_cases);
 }
 
