@@ -24,9 +24,10 @@ sub install {
 	my %frame;
 	foreach my $op (
 		qw(error display newline),
-		qw(add subtract numequals equals multiply),
+		qw(add subtract numequals multiply),
 		qw(cons car cdr list),
-		qw(not)
+		qw(not),
+        qw(equals isnull),
 		) {
 		my $subclass = "Schip::Evaluator::Primitive::" . ucfirst $op;
 		my $instance = $subclass->new;
@@ -109,27 +110,6 @@ sub die_error {
 	}
 	sub symbol { '*' }
 
-
-	package Schip::Evaluator::Primitive::Equals;
-	use Moose;
-	extends qw(Schip::Evaluator::Primitive);
-
-	sub code {
-		my ($self, $args) = @_;
-        $self->die_numargs($args, 2, 1);
-        my @copy = @$args;
-        my $first = shift @copy;
-        my $same = 1;
-    VAL:
-        foreach my $val (@copy) {
-            unless ($val->equals($first)) {
-                $same = 0;
-                last VAL;
-            }
-        }
-        return Schip::AST::Num->new($same);
-    }
-	sub symbol { 'equal?' }
 
 	package Schip::Evaluator::Primitive::Numequals;
 	use Moose;
@@ -249,7 +229,40 @@ sub die_error {
 	}
 	sub symbol { 'not' }
 
+	package Schip::Evaluator::Primitive::Equals;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
 
+	sub code {
+		my ($self, $args) = @_;
+        $self->die_numargs($args, 2, 1);
+        my @copy = @$args;
+        my $first = shift @copy;
+        my $same = 1;
+    VAL:
+        foreach my $val (@copy) {
+            unless ($val->equals($first)) {
+                $same = 0;
+                last VAL;
+            }
+        }
+        return Schip::AST::Num->new($same);
+    }
+	sub symbol { 'equal?' }
+
+
+	package Schip::Evaluator::Primitive::Isnull;
+	use Moose;
+	extends qw(Schip::Evaluator::Primitive);
+
+	sub code {
+		my ($self, $args) = @_;
+        $self->die_numargs($args, 1);
+        my $is_null = $args->[0]->isa('Schip::AST::NilPair')
+                    || ($args->[0]->is_list && $args->[0]->length == 0);
+        return Schip::AST::Num->new($is_null ? 1 : 0);
+    }
+	sub symbol { 'null?' }
 }
 
 1;
