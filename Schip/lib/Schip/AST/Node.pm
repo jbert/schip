@@ -52,6 +52,7 @@ use Carp;
 
     sub is_list { 0; }
     sub is_pair { 0; }
+    sub is_null { 0; }
 }
 
 {
@@ -187,6 +188,8 @@ use Carp;
     sub cddr    { $_[0]->cdr->cdr; }
     sub caddr   { $_[0]->cdr->cdr->car; }
     sub cdddr   { $_[0]->cdr->cdr->cdr; }
+    sub cadddr  { $_[0]->cdr->cdr->cdr->car; }
+    sub cddddr  { $_[0]->cdr->cdr->cdr->cdr; }
 }
 
 {

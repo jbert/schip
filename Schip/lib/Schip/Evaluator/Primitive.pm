@@ -169,7 +169,7 @@ sub die_error {
 
 	sub code {
 		my ($self, $args) = @_;
-		return Schip::AST::List->new(@$args);
+		return Schip::AST::Pair->make_list(@$args);
 	}
 	sub symbol { 'list' }
 

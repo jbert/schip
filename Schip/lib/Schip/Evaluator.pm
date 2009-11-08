@@ -90,7 +90,7 @@ sub _evaluate_list {
 	if ($QUASIQUOTE_LEVEL > 0
         && !($car->isa('Schip::AST::Sym') && $car->value eq 'unquote')) {
 		my @evaluated_args = $list_form->map(sub { my $form = shift; $self->_evaluate_form($form);});
-		return Schip::AST::List->new(@evaluated_args);
+		return Schip::AST::Pair->make_list(@evaluated_args);
 	}
 
 	my $form_handler = $self->_lookup_special_form($car);
@@ -126,11 +126,11 @@ my %special_forms = (
 			my $deflist 	= $cadr;
 			$sym			= $deflist->car;
 			my $lambda_args	= $deflist->cdr;
-            $body = Schip::AST::List->new(
-                    Schip::AST::Sym->new('lambda'),
+            $body = Schip::AST::Pair->new(
+                Schip::AST::Sym->new('lambda'),
+                Schip::AST::Pair->new(
                     $lambda_args,
-                );
-            $body->append($form->cddr);
+                    $form->cddr));
 		}
 		else {
 			# (define sym expr) form
@@ -156,7 +156,7 @@ my %special_forms = (
         if ($raw_params->is_list) {
             my @vals;
             $raw_params->foreach(sub { push @vals, shift; });
-            $params = Schip::AST::List->new(@vals);
+            $params = Schip::AST::Pair->make_list(@vals);
         }
         else {
             my @params;
@@ -170,7 +170,7 @@ my %special_forms = (
                     last NODE;
                 }
             }
-            $params = Schip::AST::List->new(@params);
+            $params = Schip::AST::Pair->make_list(@params);
         }
 
 		return Schip::Evaluator::Lambda->new(
@@ -247,11 +247,10 @@ sub _value_is_true {
 	my $class = shift;
 	my $node  = shift;
 	given ($node) {
-		when ($_->isa('Schip::AST::List'))	{ return $_->value->length > 0; }
+		when ($_->is_pair)                  { return $_->is_null ? 0 : 1; }
 		when ($_->isa('Schip::AST::Num')) 	{ return $_->value != 0; }
 		when ($_->isa('Schip::AST::Str')) 	{ return $_->value ne ""; }
 		when ($_->isa('Schip::AST::Sym'))	{ return 1; }
-		when ($_->isa('Schip::AST::NilPair'))	{ return 0; }
 		default								{
             die_error("Unhandled truth case: " . (ref $node ? ref $node : $node));
         }

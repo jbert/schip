@@ -3,7 +3,7 @@ use Moose;
 
 extends qw(Schip::Evaluator::Invokable);
 
-has 'params'	=> (is => 'ro', isa => 'Schip::AST::List');
+has 'params'	=> (is => 'ro', isa => 'Schip::AST::Pair');
 has 'rest'	    => (is => 'ro', isa => 'Maybe[Schip::AST::Sym]');
 has 'body'		=> (is => 'ro', isa => 'Schip::AST::Node');
 has 'env'		=> (is => 'ro', isa => 'Schip::Env');
@@ -25,7 +25,7 @@ sub invoke {
 		unless (defined $rest && $num_args >= $params->length)
             || (!defined $rest && $num_args == $params->length);
 	my %frame = $params->map(sub {$_[0] => shift @args});
-    $frame{$rest} = Schip::AST::List->new(@args) if defined $rest;
+    $frame{$rest} = Schip::AST::Pair->make_list(@args) if defined $rest;
 	my $env = $self->env;
 	$env->push_frame(%frame);
 	my $evaluator = Schip::Evaluator->new(env => $self->env);

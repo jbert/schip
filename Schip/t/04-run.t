@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 270;
+use Test::More tests => 305;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -239,12 +239,11 @@ sub test_two_plus_two {
 }
 
 sub make_two_plus_two {
-	my $form = Schip::AST::List->new;
-	$form->unshift(
-			Schip::AST::Sym->new('+'),
-			Schip::AST::Num->new(2),
-			Schip::AST::Num->new(2),
-			);
+	my $form = Schip::AST::Pair->make_list(
+            Schip::AST::Sym->new('+'),
+            Schip::AST::Num->new(2),
+            Schip::AST::Num->new(2),
+            );
 
 	return $form;
 }
