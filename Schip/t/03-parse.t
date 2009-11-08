@@ -19,7 +19,7 @@ my $code = '(display "hello, world")';
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, "root has 2 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "display -> symbol");
@@ -34,7 +34,7 @@ $code = '(display "hello, \\"world\\"")';
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, "root has 2 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "display -> symbol");
@@ -66,7 +66,7 @@ $code = "(lambda (x) (+ 2 x))";
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 3, "root has 3 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "lambda -> symbol");
@@ -102,7 +102,7 @@ $code = "'()";
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, "root has 2 children");
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
 is($tree->nth(0), 'quote', "first val quote");
@@ -113,7 +113,7 @@ $code = '("")';
 $tree = $parser->parse($code);
 ok($tree, "can parse code");
 isa_ok($tree, 'Schip::AST::Node', "tree is-a node");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 1, "root has 0 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Str', "found string");
@@ -122,13 +122,13 @@ is($tree->nth(0), "", "and it's empty");
 $code = "'(a b c)";
 $tree = $parser->parse($code);
 ok($tree, "can parse quoted list");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, " has 2 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
 is($tree->nth(0), 'quote', "first child is a sym called quote");
 
-isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+ok($tree->nth(1)->is_list, "second child is a list");
 is($tree->nth(1)->length, 3, "second child has 3 elements");
 
 $code = "(a '(b c))";
@@ -149,34 +149,34 @@ is($tree->deparse, $code, "deparse doesn't have comments");
 $code = '`(a b c)';
 $tree = $parser->parse($code);
 ok($tree, "can parse quasiquoted list");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, " has 2 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
 is($tree->nth(0), 'quasiquote', "first child is a sym called quasiquote");
 
-isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+ok($tree->nth(1)->is_list, "second child is-a list");
 is($tree->nth(1)->length, 3, "second child has 3 elements");
 
 
 $code = "`(a ,b ,@(cdr '(1 2 3)))";
 $tree = $parser->parse($code);
 ok($tree, "can parse complex qq list");
-isa_ok($tree, 'Schip::AST::List', "tree is-a list");
+ok($tree->is_list, "tree is-a list");
 is($tree->length, 2, " has 2 children");
 
 isa_ok($tree->nth(0), 'Schip::AST::Sym', "first child is a sym");
 is($tree->nth(0), 'quasiquote', "first child is a sym called quasiquote");
 
-isa_ok($tree->nth(1), 'Schip::AST::List', "second child is a list");
+ok($tree->nth(1)->is_list, "second child is-a list");
 is($tree->nth(1)->length, 3, "second child has 3 elements");
 
-isa_ok($tree->nth(1)->nth(1), 'Schip::AST::List', "can find list where we're expecting comma");
+ok($tree->nth(1)->nth(1)->is_list, "can find list where we're expecting comma");
 is($tree->nth(1)->nth(1)->length, 2, "comma list has 2 elts");
 isa_ok($tree->nth(1)->nth(1)->nth(0), 'Schip::AST::Sym', "2 elt list begins with symbol");
 is($tree->nth(1)->nth(1)->nth(0), 'unquote', ", becomes 'unquote' symbol");
 
-isa_ok($tree->nth(1)->nth(2), 'Schip::AST::List', "can find list where we're expecting comma-at");
+ok($tree->nth(1)->nth(2)->is_list, "can find list where we're expecting comma-at");
 is($tree->nth(1)->nth(2)->length, 2, "comma-at list has 2 elts");
 isa_ok($tree->nth(1)->nth(2)->nth(0), 'Schip::AST::Sym', "2 elt list begins with symbol");
 is($tree->nth(1)->nth(2)->nth(0), 'unquote-splicing', ", becomes 'unquote-splicing' symbol");
