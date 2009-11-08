@@ -38,6 +38,7 @@ EOC
 
 foreach my $tc (@test_cases) {
 	my $code				= $tc->{code};
+    note $code;
 	my $expected_response	= $tc->{resp};
 	my $response = '';
 

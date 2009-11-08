@@ -17,13 +17,11 @@ has 'env'		=> (is => 'rw',
 our $QUASIQUOTE_LEVEL = 0;
 
 sub evaluate_forms {
-	my ($self, @forms) = @_;
+	my $self = shift;
 
-	my $value;
+    my $value;
 	eval {
-		while (defined (my $form = shift @forms)) {
-			$value = $self->_evaluate_form($form);
-		}
+        $value = $self->_evaluate_forms(@_);
 	};
 	if ($@) {
 		if (UNIVERSAL::isa($@, 'Schip::Evaluator::Error')) {
@@ -33,6 +31,17 @@ sub evaluate_forms {
 			die $@;
 		}
 	}
+	return $value;
+}
+
+sub _evaluate_forms {
+	my ($self, @forms) = @_;
+
+    # Implicit begin
+	my $value;
+    while (defined (my $form = shift @forms)) {
+        $value = $self->_evaluate_form($form);
+    }
 	return $value;
 }
 
@@ -89,7 +98,7 @@ sub _evaluate_list {
 
 	# Not a special form
 	my $invoker = $self->_evaluate_form($car);
-	die_error("Symbol in car position is not invokable: " . $car->value)
+	die_error("Symbol in car position is not invokable: " . $car->to_string)
 		unless $invoker->isa('Schip::Evaluator::Invokable');
 
 	my @evaluated_args = $list_form->map(sub { $self->_evaluate_form($_[0]); }, 1);
@@ -112,15 +121,16 @@ my %special_forms = (
 
 		my ($sym, $body);
 		if ($cadr->is_pair) {
-			# (define (foo x y) expr) form
+			# (define (foo x y) expr1) or
+			# (define (foo x y) expr1 expr2) form
 			my $deflist 	= $cadr;
 			$sym			= $deflist->car;
 			my $lambda_args	= $deflist->cdr;
-			$body 			= Schip::AST::List->new(
-				Schip::AST::Sym->new('lambda'),
-                $lambda_args,
-				$form->caddr,
-			);
+            $body = Schip::AST::List->new(
+                    Schip::AST::Sym->new('lambda'),
+                    $lambda_args,
+                );
+            $body->append($form->cddr);
 		}
 		else {
 			# (define sym expr) form
@@ -162,12 +172,11 @@ my %special_forms = (
             }
             $params = Schip::AST::List->new(@params);
         }
-		my $body	= $form->caddr;
 
 		return Schip::Evaluator::Lambda->new(
 			params	=> $params,
             rest    => $rest,
-			body	=> $body,
+			body	=> $form->cddr,
 			env		=> $eval->env->clone,
 		);
 	},

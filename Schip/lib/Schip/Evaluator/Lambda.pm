@@ -29,7 +29,11 @@ sub invoke {
 	my $env = $self->env;
 	$env->push_frame(%frame);
 	my $evaluator = Schip::Evaluator->new(env => $self->env);
-	my $value = $evaluator->_evaluate_form($self->body);
+	my $value;
+	$self->body->foreach(sub {
+        my $form = shift;
+        $value = $evaluator->_evaluate_form($form);
+    });
 	$env->pop_frame;
 	return $value;
 }

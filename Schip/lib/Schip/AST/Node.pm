@@ -356,7 +356,6 @@ use Carp;
 	sub cdddr		{ my $self = shift; return $self->cdr->cdr->cdr; }
 	sub cddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr; }
 	sub cdddddr		{ my $self = shift; return $self->cdr->cdr->cdr->cdr->cdr; }
-
 }
 
 1;

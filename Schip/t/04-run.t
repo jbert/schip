@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 250;
+use Test::More tests => 270;
 use Moose::Autobox;
 
 BEGIN { use_ok('Schip::Evaluator'); }
@@ -14,8 +14,9 @@ run_main_tests();
 exit 0;
 
 sub run_main_tests {
-	test_dotted_lambda();
+	test_define();
 	test_lambda();
+	test_dotted_lambda();
 	test_pairs();
 	test_if();
     test_atoms();
@@ -23,7 +24,6 @@ sub run_main_tests {
 	test_quote();
 	test_begin();
 	test_error();
-	test_define();
 	test_closure();
 }
 
@@ -64,10 +64,10 @@ sub test_error {
 			(error \"bob\")
 			5)"				=> undef,
 
-#		"(/ 1 1)"		=> "1",
-#		"(/ 2 1)"		=> "2",
-#		"(/ 2 0)"		=> undef,
-#		"(/ 1 10)"		=> "1/10",
+		"(/ 1 1)"		=> "1",
+		"(/ 2 1)"		=> "2",
+		"(/ 2 0)"		=> undef,
+		"(/ 1 10)"		=> "1/10",
 	);
 	run_test_cases("test error", @test_cases);
 }
@@ -85,6 +85,10 @@ sub test_begin {
 sub test_define {
 	my @test_cases = (
 		# Basic test of define (define returns defined val)
+
+		"(begin
+			(define (f x) x)
+			(f 1))"     => 1,
 		"(define x 2)"	=> "2",
 		"(define x (+ 2 2))"	=> "4",
 		"(begin
@@ -95,6 +99,25 @@ sub test_define {
 			(define y (+ 3 4))
 			(define z (+ x y))
 			z)"			=> "11",
+		"(begin
+			(define (f x . y) x)
+			(f 1))"     => 1,
+		"(begin
+			(define (f x . y) x)
+			(f 1 2))"   => 1,
+		"(begin
+			(define (f x . y) x)
+			(f 1 2 3))" => 1,
+
+		"(begin
+			(define (f x . y) y)
+			(f 1))"     => [],
+		"(begin
+			(define (f x . y) y)
+			(f 1 2))"   => 2,
+		"(begin
+			(define (f x . y) y)
+			(f 1 2 3))" => [2, 3],
 	);
 	run_test_cases("test define", @test_cases);
 }
@@ -127,6 +150,8 @@ sub test_lambda {
 		"((lambda (x y) (+ x y)) 3 4)"	=> 7,
 		"((lambda (x y) y) 3 4)"	    => 4,
 		"((lambda (x y) x) 3 4)"	    => 3,
+		"((lambda (x y) x y) 3 4)"	    => 4,
+		"((lambda (x y) (+ x 1) (+ y 2)) 3 4)"	    => 6,
 	);
 	run_test_cases("test lambda", @test_cases);
 }

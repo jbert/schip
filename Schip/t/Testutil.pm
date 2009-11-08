@@ -76,7 +76,7 @@ sub compare_ast_tree {
 		}
 	}
 	else {
-		is($got->value, $expected, $str);
+		is($got, $expected, $str);
 	}
 }
 
