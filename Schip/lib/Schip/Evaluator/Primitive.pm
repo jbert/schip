@@ -196,8 +196,8 @@ sub die_error {
 		my ($self, $args) = @_;
 		$self->die_error("car called with != 1 args") if @$args != 1;
 		my $arg = $args->[0];
-		$self->die_error("car called on non-pair/non-list: " . ref $arg)
-			unless $arg->isa('Schip::AST::Pair') || $arg->isa('Schip::AST::List');
+		$self->die_error("car called on non-pair: " . ref $arg)
+			unless $arg->is_pair;
 		return $arg->car;
 	}
 	sub symbol { 'car' }
@@ -211,8 +211,8 @@ sub die_error {
 		my ($self, $args) = @_;
 		$self->die_error("cdr called with != 1 args") if @$args != 1;
 		my $arg = $args->[0];
-		$self->die_error("cdr called on non-pair/non-list: " . ref $arg)
-			unless $arg->isa('Schip::AST::Pair') || $arg->isa('Schip::AST::List');
+		$self->die_error("cdr called on non-pair: " . ref $arg)
+			unless $arg->is_pair;
 		return $arg->cdr;
 	}
 	sub symbol { 'cdr' };
