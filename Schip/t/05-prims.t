@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 213;
+use Test::More tests => 229;
 use Moose::Autobox;
 
 use Schip::Evaluator;
@@ -66,10 +66,10 @@ sub test_equals {
 		'(= 1 1 1)'					=> 1,
 		'(= 1 1 1)'					=> 1,
 
-		'(= "a" "b")'				=> 0,
-		'(= "a" "a")'				=> 1,
-		'(= "a" 1)'					=> 0,
-		'(= "a" 65)'				=> 0,
+		'(equal? "a" "b")'			=> 0,
+		'(equal? "a" "a")'			=> 1,
+		'(equal? "a" 1)'			=> 0,
+		'(equal? "a" 65)'			=> 0,
 	);
 	run_test_cases('equals', @test_cases);
 }
