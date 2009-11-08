@@ -128,7 +128,7 @@ use Carp;
 		my ($self, $deparse, $parent_hid_dot) = @_;
 		my ($car, $cdr) = ($self->car, $self->cdr);
 		my $ret = '';
-		my $hide_dot = $self->cdr->is_list;
+		my $hide_dot = $self->cdr->is_pair;
 		$ret .= '(' unless $parent_hid_dot;
 		$ret .= $car->to_string($deparse);
         $ret .= ' ' unless $cdr->is_null;

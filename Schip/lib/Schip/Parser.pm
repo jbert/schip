@@ -85,7 +85,6 @@ sub _decorate_token_tree {
 			@items = map { $self->_decorate_token_tree($_) } @items;
 			my $cdr = pop @items;
 			my $car = pop @items;
-			warn "TODO: use pair ctor from list";
 			my $return = Schip::AST::Pair->new($car, $cdr);
 			while (@items) {
 				$return = Schip::AST::Pair->new(pop @items, $return);
