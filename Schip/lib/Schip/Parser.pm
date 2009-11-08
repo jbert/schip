@@ -47,12 +47,7 @@ sub _decorate_token_tree {
 	given ($type) {
 		when ('list')	{
 			my @list = map { $self->_decorate_token_tree($_) } @$value;
-            if (@list) {
-                return Schip::AST::List->new(@list);
-            }
-            else {
-                return Schip::AST::NilPair->new;
-            }
+            return Schip::AST::Pair->make_list(@list);
 		}
 		when ('pair')	{
 			my @pair = map { $self->_decorate_token_tree($_) } @$value;
@@ -61,22 +56,26 @@ sub _decorate_token_tree {
 		# TODO - make these data driven to reduce repeated code?
 		when ('qform') {
 			$type = 'list';
-			return Schip::AST::List->new(Schip::AST::Sym->new('quote'),
+			return Schip::AST::Pair->make_list(
+                Schip::AST::Sym->new('quote'),
 				$self->_decorate_token_tree($value));
 		}
 		when ('qqform') {
 			$type = 'list';
-			return Schip::AST::List->new(Schip::AST::Sym->new('quasiquote'),
+			return Schip::AST::Pair->make_list(
+                Schip::AST::Sym->new('quasiquote'),
 				$self->_decorate_token_tree($value));
 		}
 		when ('uqform') {
 			$type = 'list';
-			return Schip::AST::List->new(Schip::AST::Sym->new('unquote'),
+			return Schip::AST::Pair->make_list(
+                Schip::AST::Sym->new('unquote'),
 				$self->_decorate_token_tree($value));
 		}
 		when ('uqsform') {
 			$type = 'list';
-			return Schip::AST::List->new(Schip::AST::Sym->new('unquote-splicing'),
+			return Schip::AST::Pair->make_list(
+                Schip::AST::Sym->new('unquote-splicing'),
 				$self->_decorate_token_tree($value));
 		}
 		when ('dotted_list') {

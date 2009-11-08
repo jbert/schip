@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use Test::More tests => 36;
+use Test::More tests => 34;
 
 BEGIN { use_ok('Schip::AST::Node'); }
 
@@ -10,28 +10,27 @@ ok($two, "can create num 'two'");
 
 note("building the ast tree for (lambda (x) (+ 2 x))");
 
-my $args = Schip::AST::List->new;
-ok($args, "can create empty s.a.list for args");
-$args->unshift(Schip::AST::Sym->new('x'));
-is($args->length, 1, "now args has 1 item");
+my $args = Schip::AST::Pair->make_list(
+        Schip::AST::Sym->new('x')
+    );
+ok($args->is_list, "made list for args");
+is($args->length, 1, "which has 1 item");
 
-my $body = Schip::AST::List->new;
-ok($body, "can create empty s.a.list for body");
-$body->unshift(
+my $body = Schip::AST::Pair->make_list(
 	Schip::AST::Sym->new('+'),
 	Schip::AST::Num->new(2),
 	Schip::AST::Sym->new('x'),
 );
 is($body->length, 3, "body now has 3 items");
 
-my $lambda = Schip::AST::List->new;
-ok($lambda, "can create empty s.a.list for lambda");
-$lambda->unshift($body);
-$lambda->unshift($args);
-$lambda->unshift(Schip::AST::Sym->new('lambda'));
+my $lambda = Schip::AST::Pair->make_list(
+        Schip::AST::Sym->new('lambda'),
+        $args,
+        $body,
+    );
 is($lambda->length, 3, "lambda has 3 items");
 
-is($lambda->nth(2)->nth(2), 'x', "can create down tree correctly");
+is($lambda->nth(2)->nth(2), 'x', "can walk down tree correctly");
 
 is($lambda->deparse,
 	"(lambda (x) (+ 2 x))",
@@ -53,7 +52,9 @@ foreach my $test_str (keys %test_cases) {
 }
 
 my $num_nums = 10;
-my $nums = Schip::AST::List->new(map { Schip::AST::Num->new($_) } (1..$num_nums));
+my $nums = Schip::AST::Pair->make_list(
+        map { Schip::AST::Num->new($_) } (1..$num_nums)
+);
 ok($nums, "can create list of nums");
 is($nums->length, $num_nums, "list has length $num_nums");
 is($nums->nth(0), 1, "list starts with 1");
