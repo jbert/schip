@@ -37,4 +37,11 @@ This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.0 or,
 at your option, any later version of Perl 5 you may have available.
 
+## Dependencies
 
+Moose, libmoose-perl
+Class::Accessor, libclass-accessor-perl
+Parse::RecDescent, libparse-recdescent-perl
+MooseX::NonMoose, libmoosex-nonmoose-perl
+Class::ErrorHandler, libclass-errorhandler-perl
+Moose::Autobox, libmoose-autobox-perl
