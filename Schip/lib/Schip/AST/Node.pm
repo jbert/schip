@@ -24,7 +24,7 @@ use Carp;
 	use base qw(Schip::AST::Node);
 	__PACKAGE__->mk_accessors(qw(value));
 
-	use overload
+	use overload fallback => 1,
 		'""' => "to_string";
 
 	sub new {
