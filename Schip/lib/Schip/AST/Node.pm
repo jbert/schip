@@ -5,7 +5,8 @@ use Carp;
 {
 	package Schip::AST::Node;
 	use base qw(Class::Accessor::Fast);
-	__PACKAGE__->mk_accessors qw(type);
+
+	__PACKAGE__->mk_accessors(qw(type));
 
 	sub description { die "Abstract node doesn't have a description"; }
 
@@ -21,7 +22,7 @@ use Carp;
 {
 	package Schip::AST::Atom;
 	use base qw(Schip::AST::Node);
-	__PACKAGE__->mk_accessors qw(value);
+	__PACKAGE__->mk_accessors(qw(value));
 
 	use overload
 		'""' => "to_string";
@@ -98,7 +99,7 @@ use Carp;
 {
 	package Schip::AST::Pair;
 	use base qw(Schip::AST::Node);
-	__PACKAGE__->mk_accessors qw(car cdr);
+	__PACKAGE__->mk_accessors(qw(car cdr));
 
 	sub new {
 		my ($class, $car, $cdr) = @_;
